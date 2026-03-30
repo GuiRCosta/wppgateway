@@ -71,7 +71,7 @@ func NewRouter(deps Dependencies) *fiber.App {
 	app.Use(recover.New())
 	app.Use(helmet.New(helmet.Config{
 		CrossOriginEmbedderPolicy: "unsafe-none",
-		ContentSecurityPolicy:     "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; connect-src 'self'; img-src 'self' data:; font-src 'self'",
+		ContentSecurityPolicy:     "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com; connect-src 'self'; img-src 'self' data:; font-src 'self' https://fonts.gstatic.com",
 	}))
 
 	allowedOrigins := os.Getenv("CORS_ORIGINS")
