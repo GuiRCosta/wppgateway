@@ -116,6 +116,24 @@ func (h *MessageHandler) Send(c *fiber.Ctx) error {
 }
 
 func (h *MessageHandler) GetStatus(c *fiber.Ctx) error {
+	tenant := middleware.GetTenant(c)
+	if tenant == nil {
+		return response.ErrUnauthorized(c, "Tenant not found")
+	}
+
+	groupID, err := validator.ValidateUUID(c.Params("groupId"))
+	if err != nil {
+		return response.ErrBadRequest(c, err.Error())
+	}
+
+	group, err := h.groupRepo.FindByID(c.Context(), groupID)
+	if err != nil {
+		return response.ErrInternal(c, "Failed to get group")
+	}
+	if group == nil || group.TenantID != tenant.ID {
+		return response.ErrNotFound(c, "Group not found")
+	}
+
 	msgID, err := validator.ValidateUUID(c.Params("messageId"))
 	if err != nil {
 		return response.ErrBadRequest(c, err.Error())
@@ -125,7 +143,7 @@ func (h *MessageHandler) GetStatus(c *fiber.Ctx) error {
 	if err != nil {
 		return response.ErrInternal(c, "Failed to get message")
 	}
-	if msg == nil {
+	if msg == nil || msg.GroupID == nil || *msg.GroupID != groupID {
 		return response.ErrNotFound(c, "Message not found")
 	}
 
@@ -143,8 +161,20 @@ func (h *MessageHandler) ListByGroup(c *fiber.Ctx) error {
 		return response.ErrBadRequest(c, err.Error())
 	}
 
+	group, err := h.groupRepo.FindByID(c.Context(), groupID)
+	if err != nil {
+		return response.ErrInternal(c, "Failed to get group")
+	}
+	if group == nil || group.TenantID != tenant.ID {
+		return response.ErrNotFound(c, "Group not found")
+	}
+
+	limit := c.QueryInt("limit", 50)
+	if limit > 200 {
+		limit = 200
+	}
 	filter := domain.MessageFilter{
-		Limit:  c.QueryInt("limit", 50),
+		Limit:  limit,
 		Offset: c.QueryInt("offset", 0),
 	}
 

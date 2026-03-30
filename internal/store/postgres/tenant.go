@@ -2,6 +2,8 @@ package postgres
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 
 	"github.com/google/uuid"
@@ -10,6 +12,11 @@ import (
 
 	"github.com/guilhermecosta/wpp-gateway/internal/domain"
 )
+
+func hashAPIKey(apiKey string) string {
+	h := sha256.Sum256([]byte(apiKey))
+	return hex.EncodeToString(h[:])
+}
 
 type TenantRepo struct {
 	pool *pgxpool.Pool
@@ -21,7 +28,7 @@ func NewTenantRepo(pool *pgxpool.Pool) *TenantRepo {
 
 func (r *TenantRepo) FindByID(ctx context.Context, id uuid.UUID) (*domain.Tenant, error) {
 	query := `
-		SELECT id, name, api_key, plan, max_groups, max_instances, is_active, created_at
+		SELECT id, name, api_key_hash, plan, max_groups, max_instances, is_active, created_at
 		FROM tenants WHERE id = $1`
 
 	var t domain.Tenant
@@ -39,12 +46,13 @@ func (r *TenantRepo) FindByID(ctx context.Context, id uuid.UUID) (*domain.Tenant
 }
 
 func (r *TenantRepo) FindByAPIKey(ctx context.Context, apiKey string) (*domain.Tenant, error) {
+	hash := hashAPIKey(apiKey)
 	query := `
-		SELECT id, name, api_key, plan, max_groups, max_instances, is_active, created_at
-		FROM tenants WHERE api_key = $1`
+		SELECT id, name, api_key_hash, plan, max_groups, max_instances, is_active, created_at
+		FROM tenants WHERE api_key_hash = $1`
 
 	var t domain.Tenant
-	err := r.pool.QueryRow(ctx, query, apiKey).Scan(
+	err := r.pool.QueryRow(ctx, query, hash).Scan(
 		&t.ID, &t.Name, &t.APIKey, &t.Plan,
 		&t.MaxGroups, &t.MaxInstances, &t.IsActive, &t.CreatedAt,
 	)
@@ -58,13 +66,14 @@ func (r *TenantRepo) FindByAPIKey(ctx context.Context, apiKey string) (*domain.T
 }
 
 func (r *TenantRepo) Create(ctx context.Context, input domain.CreateTenantInput, apiKey string) (*domain.Tenant, error) {
+	hash := hashAPIKey(apiKey)
 	query := `
-		INSERT INTO tenants (name, api_key)
+		INSERT INTO tenants (name, api_key_hash)
 		VALUES ($1, $2)
-		RETURNING id, name, api_key, plan, max_groups, max_instances, is_active, created_at`
+		RETURNING id, name, api_key_hash, plan, max_groups, max_instances, is_active, created_at`
 
 	var t domain.Tenant
-	err := r.pool.QueryRow(ctx, query, input.Name, apiKey).Scan(
+	err := r.pool.QueryRow(ctx, query, input.Name, hash).Scan(
 		&t.ID, &t.Name, &t.APIKey, &t.Plan,
 		&t.MaxGroups, &t.MaxInstances, &t.IsActive, &t.CreatedAt,
 	)
@@ -79,7 +88,7 @@ func (r *TenantRepo) Update(ctx context.Context, id uuid.UUID, input domain.Upda
 		UPDATE tenants SET
 			name = COALESCE($2, name)
 		WHERE id = $1
-		RETURNING id, name, api_key, plan, max_groups, max_instances, is_active, created_at`
+		RETURNING id, name, api_key_hash, plan, max_groups, max_instances, is_active, created_at`
 
 	var t domain.Tenant
 	err := r.pool.QueryRow(ctx, query, id, input.Name).Scan(

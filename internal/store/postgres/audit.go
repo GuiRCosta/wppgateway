@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -75,5 +76,5 @@ func (r *AuditRepo) List(ctx context.Context, tenantID uuid.UUID, action string,
 }
 
 func itoa(i int) string {
-	return string(rune('0' + i))
+	return strconv.Itoa(i)
 }

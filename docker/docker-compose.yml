@@ -4,13 +4,13 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: wpp_gateway
-      POSTGRES_USER: wpp
-      POSTGRES_PASSWORD: wpp_secret
+      POSTGRES_DB: ${POSTGRES_DB:-wpp_gateway}
+      POSTGRES_USER: ${POSTGRES_USER:-wpp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U wpp -d wpp_gateway"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wpp} -d ${POSTGRES_DB:-wpp_gateway}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -20,11 +20,11 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD:?REDIS_PASSWORD is required}"
     volumes:
       - redisdata:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "REDISCLI_AUTH=$REDIS_PASSWORD redis-cli ping"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -61,8 +61,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?GRAFANA_PASSWORD is required}
     volumes:
       - grafanadata:/var/lib/grafana
       - ../grafana/provisioning:/etc/grafana/provisioning

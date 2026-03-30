@@ -3,12 +3,14 @@ package api
 import (
 	"io/fs"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/filesystem"
+	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -49,14 +51,17 @@ func NewRouter(deps Dependencies) *fiber.App {
 		BodyLimit:    10 * 1024 * 1024, // 10MB
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			code := fiber.StatusInternalServerError
+			message := "Internal server error"
 			if e, ok := err.(*fiber.Error); ok {
 				code = e.Code
+				message = e.Message
 			}
+			deps.Log.Error().Err(err).Str("path", c.Path()).Msg("unhandled error")
 			return c.Status(code).JSON(fiber.Map{
 				"success": false,
 				"error": fiber.Map{
 					"code":    "internal_error",
-					"message": err.Error(),
+					"message": message,
 				},
 			})
 		},
@@ -64,7 +69,18 @@ func NewRouter(deps Dependencies) *fiber.App {
 
 	// Global middleware
 	app.Use(recover.New())
-	app.Use(cors.New())
+	app.Use(helmet.New())
+
+	allowedOrigins := os.Getenv("CORS_ORIGINS")
+	if allowedOrigins == "" {
+		allowedOrigins = "https://wpp.ideva.ai"
+	}
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     allowedOrigins,
+		AllowMethods:     "GET,POST,PUT,PATCH,DELETE",
+		AllowHeaders:     "Origin,Content-Type,Accept,X-API-Key",
+		AllowCredentials: false,
+	}))
 	app.Use(middleware.RequestLogger(deps.Log))
 
 	// Handlers
@@ -76,20 +92,28 @@ func NewRouter(deps Dependencies) *fiber.App {
 	broadcastH := handler.NewBroadcastHandler(deps.BroadcastRepo, deps.GroupRepo, deps.Dispatcher)
 	blacklistH := handler.NewBlacklistHandler(deps.BlacklistRepo, deps.GroupRepo)
 	auditH := handler.NewAuditHandler(deps.AuditRepo)
-	metricsH := handler.NewMetricsHandler(deps.DB)
+	metricsH := handler.NewMetricsHandler(deps.DB, deps.GroupRepo)
 	webhookH := handler.NewWebhookHandler(deps.GroupRepo, deps.Webhook)
 
 	// Public routes
 	app.Get("/health", healthH.Health)
-	app.Get("/metrics", adaptor.HTTPHandler(promhttp.Handler()))
+
+	// Metrics on internal port (not exposed publicly)
+	go func() {
+		metricsApp := fiber.New(fiber.Config{DisableStartupMessage: true})
+		metricsApp.Get("/metrics", adaptor.HTTPHandler(promhttp.Handler()))
+		if err := metricsApp.Listen("127.0.0.1:9091"); err != nil {
+			deps.Log.Error().Err(err).Msg("failed to start metrics server")
+		}
+	}()
+
+	// Tenant registration with rate limit (no auth required)
+	app.Post("/register", middleware.RateLimit(5, time.Hour), tenantH.CreateTenant)
 
 	// API v1
 	v1 := app.Group("/v1")
 	v1.Use(middleware.Auth(deps.TenantRepo))
 	v1.Use(middleware.RateLimit(1000, time.Minute))
-
-	// Tenant registration (no auth required - outside /v1 group)
-	app.Post("/register", tenantH.CreateTenant)
 
 	// Health (authenticated)
 	v1.Get("/health/detailed", healthH.HealthDetailed)
@@ -155,9 +179,10 @@ func NewRouter(deps Dependencies) *fiber.App {
 	// Audit
 	v1.Get("/account/audit-log", auditH.List)
 
-	// Logs
+	// Logs (restricted - each tenant sees only their own request logs)
 	logsH := handler.NewLogsHandler()
 	v1.Get("/logs", logsH.List)
+
 
 	// Frontend static files
 	staticFS, _ := fs.Sub(web.StaticFS, "static")

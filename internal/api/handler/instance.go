@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"context"
 	"encoding/base64"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 	"github.com/skip2/go-qrcode"
 
 	"github.com/guilhermecosta/wpp-gateway/internal/api/middleware"
@@ -22,6 +24,24 @@ type InstanceHandler struct {
 
 func NewInstanceHandler(ir domain.InstanceRepository, gr domain.GroupRepository, mgr *instance.Manager) *InstanceHandler {
 	return &InstanceHandler{instanceRepo: ir, groupRepo: gr, manager: mgr}
+}
+
+func (h *InstanceHandler) verifyOwnership(ctx context.Context, tenant *domain.Tenant, instanceID uuid.UUID) (*domain.Instance, error) {
+	inst, err := h.instanceRepo.FindByID(ctx, instanceID)
+	if err != nil {
+		return nil, err
+	}
+	if inst == nil {
+		return nil, nil
+	}
+	group, err := h.groupRepo.FindByID(ctx, inst.GroupID)
+	if err != nil {
+		return nil, err
+	}
+	if group == nil || group.TenantID != tenant.ID {
+		return nil, nil
+	}
+	return inst, nil
 }
 
 func (h *InstanceHandler) Create(c *fiber.Ctx) error {
@@ -108,7 +128,7 @@ func (h *InstanceHandler) Get(c *fiber.Ctx) error {
 		return response.ErrBadRequest(c, err.Error())
 	}
 
-	inst, err := h.instanceRepo.FindByID(c.Context(), id)
+	inst, err := h.verifyOwnership(c.Context(), tenant, id)
 	if err != nil {
 		return response.ErrInternal(c, "Failed to get instance")
 	}
@@ -120,9 +140,22 @@ func (h *InstanceHandler) Get(c *fiber.Ctx) error {
 }
 
 func (h *InstanceHandler) Update(c *fiber.Ctx) error {
+	tenant := middleware.GetTenant(c)
+	if tenant == nil {
+		return response.ErrUnauthorized(c, "Tenant not found")
+	}
+
 	id, err := validator.ValidateUUID(c.Params("instanceId"))
 	if err != nil {
 		return response.ErrBadRequest(c, err.Error())
+	}
+
+	inst, err := h.verifyOwnership(c.Context(), tenant, id)
+	if err != nil {
+		return response.ErrInternal(c, "Failed to get instance")
+	}
+	if inst == nil {
+		return response.ErrNotFound(c, "Instance not found")
 	}
 
 	var input domain.UpdateInstanceInput
@@ -142,9 +175,22 @@ func (h *InstanceHandler) Update(c *fiber.Ctx) error {
 }
 
 func (h *InstanceHandler) Delete(c *fiber.Ctx) error {
+	tenant := middleware.GetTenant(c)
+	if tenant == nil {
+		return response.ErrUnauthorized(c, "Tenant not found")
+	}
+
 	id, err := validator.ValidateUUID(c.Params("instanceId"))
 	if err != nil {
 		return response.ErrBadRequest(c, err.Error())
+	}
+
+	inst, err := h.verifyOwnership(c.Context(), tenant, id)
+	if err != nil {
+		return response.ErrInternal(c, "Failed to get instance")
+	}
+	if inst == nil {
+		return response.ErrNotFound(c, "Instance not found")
 	}
 
 	_ = h.manager.StopInstance(c.Context(), id)
@@ -157,9 +203,22 @@ func (h *InstanceHandler) Delete(c *fiber.Ctx) error {
 }
 
 func (h *InstanceHandler) GetQRCode(c *fiber.Ctx) error {
+	tenant := middleware.GetTenant(c)
+	if tenant == nil {
+		return response.ErrUnauthorized(c, "Tenant not found")
+	}
+
 	id, err := validator.ValidateUUID(c.Params("instanceId"))
 	if err != nil {
 		return response.ErrBadRequest(c, err.Error())
+	}
+
+	inst, err := h.verifyOwnership(c.Context(), tenant, id)
+	if err != nil {
+		return response.ErrInternal(c, "Failed to get instance")
+	}
+	if inst == nil {
+		return response.ErrNotFound(c, "Instance not found")
 	}
 
 	qrChan, err := h.manager.StartInstance(c.Context(), id)
@@ -195,9 +254,22 @@ func (h *InstanceHandler) GetQRCode(c *fiber.Ctx) error {
 }
 
 func (h *InstanceHandler) PairPhone(c *fiber.Ctx) error {
+	tenant := middleware.GetTenant(c)
+	if tenant == nil {
+		return response.ErrUnauthorized(c, "Tenant not found")
+	}
+
 	id, err := validator.ValidateUUID(c.Params("instanceId"))
 	if err != nil {
 		return response.ErrBadRequest(c, err.Error())
+	}
+
+	inst, err := h.verifyOwnership(c.Context(), tenant, id)
+	if err != nil {
+		return response.ErrInternal(c, "Failed to get instance")
+	}
+	if inst == nil {
+		return response.ErrNotFound(c, "Instance not found")
 	}
 
 	var body struct {
@@ -219,9 +291,22 @@ func (h *InstanceHandler) PairPhone(c *fiber.Ctx) error {
 }
 
 func (h *InstanceHandler) Connect(c *fiber.Ctx) error {
+	tenant := middleware.GetTenant(c)
+	if tenant == nil {
+		return response.ErrUnauthorized(c, "Tenant not found")
+	}
+
 	id, err := validator.ValidateUUID(c.Params("instanceId"))
 	if err != nil {
 		return response.ErrBadRequest(c, err.Error())
+	}
+
+	inst, err := h.verifyOwnership(c.Context(), tenant, id)
+	if err != nil {
+		return response.ErrInternal(c, "Failed to get instance")
+	}
+	if inst == nil {
+		return response.ErrNotFound(c, "Instance not found")
 	}
 
 	qrChan, err := h.manager.StartInstance(c.Context(), id)
@@ -243,9 +328,22 @@ func (h *InstanceHandler) Connect(c *fiber.Ctx) error {
 }
 
 func (h *InstanceHandler) Disconnect(c *fiber.Ctx) error {
+	tenant := middleware.GetTenant(c)
+	if tenant == nil {
+		return response.ErrUnauthorized(c, "Tenant not found")
+	}
+
 	id, err := validator.ValidateUUID(c.Params("instanceId"))
 	if err != nil {
 		return response.ErrBadRequest(c, err.Error())
+	}
+
+	inst, err := h.verifyOwnership(c.Context(), tenant, id)
+	if err != nil {
+		return response.ErrInternal(c, "Failed to get instance")
+	}
+	if inst == nil {
+		return response.ErrNotFound(c, "Instance not found")
 	}
 
 	if err := h.manager.StopInstance(c.Context(), id); err != nil {
@@ -258,9 +356,22 @@ func (h *InstanceHandler) Disconnect(c *fiber.Ctx) error {
 }
 
 func (h *InstanceHandler) Restart(c *fiber.Ctx) error {
+	tenant := middleware.GetTenant(c)
+	if tenant == nil {
+		return response.ErrUnauthorized(c, "Tenant not found")
+	}
+
 	id, err := validator.ValidateUUID(c.Params("instanceId"))
 	if err != nil {
 		return response.ErrBadRequest(c, err.Error())
+	}
+
+	inst, err := h.verifyOwnership(c.Context(), tenant, id)
+	if err != nil {
+		return response.ErrInternal(c, "Failed to get instance")
+	}
+	if inst == nil {
+		return response.ErrNotFound(c, "Instance not found")
 	}
 
 	_, err = h.manager.RestartInstance(c.Context(), id)
@@ -272,12 +383,17 @@ func (h *InstanceHandler) Restart(c *fiber.Ctx) error {
 }
 
 func (h *InstanceHandler) GetStatus(c *fiber.Ctx) error {
+	tenant := middleware.GetTenant(c)
+	if tenant == nil {
+		return response.ErrUnauthorized(c, "Tenant not found")
+	}
+
 	id, err := validator.ValidateUUID(c.Params("instanceId"))
 	if err != nil {
 		return response.ErrBadRequest(c, err.Error())
 	}
 
-	inst, err := h.instanceRepo.FindByID(c.Context(), id)
+	inst, err := h.verifyOwnership(c.Context(), tenant, id)
 	if err != nil {
 		return response.ErrInternal(c, "Failed to get instance")
 	}

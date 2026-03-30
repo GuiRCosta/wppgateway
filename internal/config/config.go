@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/caarlos0/env/v11"
@@ -41,10 +42,23 @@ type Config struct {
 	LogLevel string `env:"LOG_LEVEL" envDefault:"info"`
 }
 
+func (c *Config) Validate() error {
+	if c.Crypto.MasterKey == strings.Repeat("0", 64) {
+		return fmt.Errorf("ENCRYPTION_KEY is insecure - generate with: openssl rand -hex 32")
+	}
+	if len(c.Crypto.MasterKey) < 32 {
+		return fmt.Errorf("ENCRYPTION_KEY must be at least 32 characters")
+	}
+	return nil
+}
+
 func Load() (Config, error) {
 	cfg := Config{}
 	if err := env.Parse(&cfg); err != nil {
 		return Config{}, fmt.Errorf("failed to parse config: %w", err)
+	}
+	if err := cfg.Validate(); err != nil {
+		return Config{}, err
 	}
 	return cfg, nil
 }

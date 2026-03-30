@@ -16,6 +16,9 @@ func NewLogsHandler() *LogsHandler {
 func (h *LogsHandler) List(c *fiber.Ctx) error {
 	level := c.Query("level")
 	limit := c.QueryInt("limit", 100)
+	if limit > 200 {
+		limit = 200
+	}
 
 	entries := logger.Buffer.Entries(level, limit)
 

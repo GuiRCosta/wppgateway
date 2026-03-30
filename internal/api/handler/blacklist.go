@@ -39,6 +39,9 @@ func (h *BlacklistHandler) List(c *fiber.Ctx) error {
 	}
 
 	limit := c.QueryInt("limit", 50)
+	if limit > 200 {
+		limit = 200
+	}
 	offset := c.QueryInt("offset", 0)
 
 	entries, total, err := h.blacklistRepo.List(c.Context(), groupID, limit, offset)
@@ -99,6 +102,14 @@ func (h *BlacklistHandler) Remove(c *fiber.Ctx) error {
 	groupID, err := validator.ValidateUUID(c.Params("groupId"))
 	if err != nil {
 		return response.ErrBadRequest(c, err.Error())
+	}
+
+	group, err := h.groupRepo.FindByID(c.Context(), groupID)
+	if err != nil {
+		return response.ErrInternal(c, "Failed to get group")
+	}
+	if group == nil || group.TenantID != tenant.ID {
+		return response.ErrNotFound(c, "Group not found")
 	}
 
 	phone := c.Params("number")

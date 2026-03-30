@@ -83,6 +83,24 @@ func (h *BroadcastHandler) Create(c *fiber.Ctx) error {
 }
 
 func (h *BroadcastHandler) GetStatus(c *fiber.Ctx) error {
+	tenant := middleware.GetTenant(c)
+	if tenant == nil {
+		return response.ErrUnauthorized(c, "Tenant not found")
+	}
+
+	groupID, err := validator.ValidateUUID(c.Params("groupId"))
+	if err != nil {
+		return response.ErrBadRequest(c, err.Error())
+	}
+
+	group, err := h.groupRepo.FindByID(c.Context(), groupID)
+	if err != nil {
+		return response.ErrInternal(c, "Failed to get group")
+	}
+	if group == nil || group.TenantID != tenant.ID {
+		return response.ErrNotFound(c, "Group not found")
+	}
+
 	broadcastID, err := validator.ValidateUUID(c.Params("broadcastId"))
 	if err != nil {
 		return response.ErrBadRequest(c, err.Error())
@@ -100,17 +118,16 @@ func (h *BroadcastHandler) GetStatus(c *fiber.Ctx) error {
 }
 
 func (h *BroadcastHandler) List(c *fiber.Ctx) error {
-	tenant := middleware.GetTenant(c)
-	if tenant == nil {
-		return response.ErrUnauthorized(c, "Tenant not found")
+	if err := h.verifyGroupOwnership(c); err != nil {
+		return err
 	}
 
-	groupID, err := validator.ValidateUUID(c.Params("groupId"))
-	if err != nil {
-		return response.ErrBadRequest(c, err.Error())
-	}
+	groupID, _ := validator.ValidateUUID(c.Params("groupId"))
 
 	limit := c.QueryInt("limit", 20)
+	if limit > 200 {
+		limit = 200
+	}
 	offset := c.QueryInt("offset", 0)
 
 	broadcasts, total, err := h.broadcastRepo.FindByGroupID(c.Context(), groupID, limit, offset)
@@ -125,7 +142,33 @@ func (h *BroadcastHandler) List(c *fiber.Ctx) error {
 	})
 }
 
+func (h *BroadcastHandler) verifyGroupOwnership(c *fiber.Ctx) error {
+	tenant := middleware.GetTenant(c)
+	if tenant == nil {
+		return response.ErrUnauthorized(c, "Tenant not found")
+	}
+
+	groupID, err := validator.ValidateUUID(c.Params("groupId"))
+	if err != nil {
+		return response.ErrBadRequest(c, err.Error())
+	}
+
+	group, err := h.groupRepo.FindByID(c.Context(), groupID)
+	if err != nil {
+		return response.ErrInternal(c, "Failed to get group")
+	}
+	if group == nil || group.TenantID != tenant.ID {
+		return response.ErrNotFound(c, "Group not found")
+	}
+
+	return nil
+}
+
 func (h *BroadcastHandler) Pause(c *fiber.Ctx) error {
+	if err := h.verifyGroupOwnership(c); err != nil {
+		return err
+	}
+
 	broadcastID, err := validator.ValidateUUID(c.Params("broadcastId"))
 	if err != nil {
 		return response.ErrBadRequest(c, err.Error())
@@ -139,6 +182,10 @@ func (h *BroadcastHandler) Pause(c *fiber.Ctx) error {
 }
 
 func (h *BroadcastHandler) Resume(c *fiber.Ctx) error {
+	if err := h.verifyGroupOwnership(c); err != nil {
+		return err
+	}
+
 	broadcastID, err := validator.ValidateUUID(c.Params("broadcastId"))
 	if err != nil {
 		return response.ErrBadRequest(c, err.Error())
@@ -152,6 +199,10 @@ func (h *BroadcastHandler) Resume(c *fiber.Ctx) error {
 }
 
 func (h *BroadcastHandler) Cancel(c *fiber.Ctx) error {
+	if err := h.verifyGroupOwnership(c); err != nil {
+		return err
+	}
+
 	broadcastID, err := validator.ValidateUUID(c.Params("broadcastId"))
 	if err != nil {
 		return response.ErrBadRequest(c, err.Error())

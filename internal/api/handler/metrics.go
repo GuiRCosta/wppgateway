@@ -7,19 +7,21 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/guilhermecosta/wpp-gateway/internal/api/middleware"
+	"github.com/guilhermecosta/wpp-gateway/internal/domain"
 	"github.com/guilhermecosta/wpp-gateway/pkg/response"
 	"github.com/guilhermecosta/wpp-gateway/pkg/validator"
 )
 
 type MetricsHandler struct {
-	db *pgxpool.Pool
+	db        *pgxpool.Pool
+	groupRepo domain.GroupRepository
 }
 
-func NewMetricsHandler(db *pgxpool.Pool) *MetricsHandler {
-	return &MetricsHandler{db: db}
+func NewMetricsHandler(db *pgxpool.Pool, gr domain.GroupRepository) *MetricsHandler {
+	return &MetricsHandler{db: db, groupRepo: gr}
 }
 
-func (h *MetricsHandler) GroupMetrics(c *fiber.Ctx) error {
+func (h *MetricsHandler) verifyGroupOwnership(c *fiber.Ctx) error {
 	tenant := middleware.GetTenant(c)
 	if tenant == nil {
 		return response.ErrUnauthorized(c, "Tenant not found")
@@ -30,10 +32,28 @@ func (h *MetricsHandler) GroupMetrics(c *fiber.Ctx) error {
 		return response.ErrBadRequest(c, err.Error())
 	}
 
+	group, err := h.groupRepo.FindByID(c.Context(), groupID)
+	if err != nil {
+		return response.ErrInternal(c, "Failed to get group")
+	}
+	if group == nil || group.TenantID != tenant.ID {
+		return response.ErrNotFound(c, "Group not found")
+	}
+
+	return nil
+}
+
+func (h *MetricsHandler) GroupMetrics(c *fiber.Ctx) error {
+	if err := h.verifyGroupOwnership(c); err != nil {
+		return err
+	}
+
+	groupID, _ := validator.ValidateUUID(c.Params("groupId"))
+
 	ctx := c.Context()
 
 	var sent, delivered, failed int64
-	err = h.db.QueryRow(ctx, `
+	err := h.db.QueryRow(ctx, `
 		SELECT COALESCE(SUM(CASE WHEN status IN ('sent','delivered','read') THEN 1 ELSE 0 END), 0),
 		       COALESCE(SUM(CASE WHEN status IN ('delivered','read') THEN 1 ELSE 0 END), 0),
 		       COALESCE(SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END), 0)
@@ -63,15 +83,11 @@ func (h *MetricsHandler) GroupMetrics(c *fiber.Ctx) error {
 }
 
 func (h *MetricsHandler) DailyMetrics(c *fiber.Ctx) error {
-	tenant := middleware.GetTenant(c)
-	if tenant == nil {
-		return response.ErrUnauthorized(c, "Tenant not found")
+	if err := h.verifyGroupOwnership(c); err != nil {
+		return err
 	}
 
-	groupID, err := validator.ValidateUUID(c.Params("groupId"))
-	if err != nil {
-		return response.ErrBadRequest(c, err.Error())
-	}
+	groupID, _ := validator.ValidateUUID(c.Params("groupId"))
 
 	from := c.Query("from", time.Now().AddDate(0, 0, -30).Format("2006-01-02"))
 	to := c.Query("to", time.Now().Format("2006-01-02"))
@@ -120,15 +136,11 @@ func (h *MetricsHandler) DailyMetrics(c *fiber.Ctx) error {
 }
 
 func (h *MetricsHandler) InstanceMetrics(c *fiber.Ctx) error {
-	tenant := middleware.GetTenant(c)
-	if tenant == nil {
-		return response.ErrUnauthorized(c, "Tenant not found")
+	if err := h.verifyGroupOwnership(c); err != nil {
+		return err
 	}
 
-	groupID, err := validator.ValidateUUID(c.Params("groupId"))
-	if err != nil {
-		return response.ErrBadRequest(c, err.Error())
-	}
+	groupID, _ := validator.ValidateUUID(c.Params("groupId"))
 
 	rows, err := h.db.Query(c.Context(), `
 		SELECT i.id, i.phone_number, i.status, i.daily_budget, i.messages_today,
