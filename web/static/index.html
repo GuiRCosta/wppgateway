@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WPP Gateway</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/css/app.css"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            oswald: ['Oswald', 'sans-serif'],
+            space: ['Space Grotesk', 'sans-serif'],
+          },
+        },
+      },
+    }
+  </script>
+  <script src="/static/js/utils.js"></script>
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/app.js"></script>
+</head>
+<body class="min-h-screen font-space bg-[#E6E6E6] text-neutral-950 antialiased" x-data x-init="await $store.auth.init(); $store.router.init()">
+
+  <!-- TOAST NOTIFICATIONS -->
+  <div class="fixed top-4 right-4 z-[100] flex flex-col gap-2 max-w-sm">
+    <template x-for="toast in $store.toast.items" :key="toast.id">
+      <div :class="[
+        toast.removing ? 'animate-slide-out' : 'animate-slide-in',
+        toast.type === 'success' ? 'bg-emerald-900 text-emerald-100' : '',
+        toast.type === 'error' ? 'bg-red-900 text-red-100' : '',
+        toast.type === 'warning' ? 'bg-yellow-900 text-yellow-100' : '',
+        toast.type === 'info' ? 'bg-neutral-800 text-neutral-100' : '',
+      ]" class="rounded-xl px-4 py-3 shadow-lg text-sm font-medium flex items-center gap-3">
+        <template x-if="toast.type === 'success'">
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        </template>
+        <template x-if="toast.type === 'error'">
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </template>
+        <span x-text="toast.message"></span>
+        <button @click="$store.toast.dismiss(toast.id)" class="ml-auto opacity-60 hover:opacity-100">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </template>
+  </div>
+
+  <!-- CONFIRM MODAL -->
+  <div x-show="$store.ui.modalOpen" x-transition.opacity class="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="$store.ui.closeModal()">
+    <div class="bg-[#E6E6E6] rounded-2xl p-6 shadow-2xl max-w-md w-full mx-4 animate-scale-in border border-neutral-300">
+      <p class="text-sm text-neutral-700 mb-6" x-text="$store.ui.modalContent"></p>
+      <div class="flex gap-3 justify-end">
+        <button @click="$store.ui.closeModal()" class="px-5 py-2 rounded-full border border-neutral-400 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors">Cancelar</button>
+        <button @click="$store.ui.executeConfirm()" class="px-5 py-2 rounded-full bg-red-600 text-white text-xs font-semibold uppercase tracking-widest hover:bg-red-700 transition-colors">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGIN PAGE -->
+  <div x-show="$store.router.page === 'login'" class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md" x-data="loginPage()">
+      <div class="text-center mb-10">
+        <div class="flex items-center justify-center gap-2 mb-6">
+          <div class="flex gap-1">
+            <div class="w-3 h-8 bg-neutral-950 rounded-full"></div>
+            <div class="w-3 h-5 bg-neutral-950 rounded-full"></div>
+            <div class="w-3 h-8 bg-neutral-950 rounded-full"></div>
+          </div>
+        </div>
+        <h1 class="text-4xl font-oswald font-medium tracking-tight mb-2">WPP GATEWAY</h1>
+        <p class="text-xs uppercase tracking-widest text-neutral-500">WhatsApp Gateway Manager</p>
+      </div>
+
+      <!-- Login Tab -->
+      <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-6">
+        <div class="flex gap-4 mb-6">
+          <button @click="tab = 'login'" :class="tab === 'login' ? 'bg-neutral-950 text-white' : 'text-neutral-600 hover:bg-neutral-300'" class="flex-1 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-widest transition-colors">Login</button>
+          <button @click="tab = 'register'" :class="tab === 'register' ? 'bg-neutral-950 text-white' : 'text-neutral-600 hover:bg-neutral-300'" class="flex-1 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-widest transition-colors">Registro</button>
+        </div>
+
+        <!-- Login Form -->
+        <form x-show="tab === 'login'" @submit.prevent="doLogin()" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">API Key</label>
+            <div class="relative">
+              <input :type="showKey ? 'text' : 'password'" x-model="apiKey" placeholder="Insira sua API key"
+                class="w-full px-4 py-3 rounded-xl bg-[#E6E6E6] border border-neutral-300 text-sm font-space focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-colors" required/>
+              <button type="button" @click="showKey = !showKey" class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600">
+                <svg x-show="!showKey" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                <svg x-show="showKey" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" :disabled="loading" class="w-full group transition-all duration-300 overflow-hidden font-medium text-neutral-200 bg-gradient-to-r from-neutral-700 to-neutral-800 rounded-full py-3 relative btn-press" style="box-shadow: 0 15px 33px -12px rgba(38,38,38,0.7), inset 0 4px 6.3px rgba(82,82,82,0.5), inset 0 -5px 6.3px rgba(23,23,23,0.8)">
+            <div class="group-hover:translate-y-0 transition-transform duration-300 bg-white/10 absolute inset-0 translate-y-full"></div>
+            <span class="relative flex items-center justify-center gap-2 text-xs font-semibold tracking-widest uppercase">
+              <template x-if="loading"><span class="animate-pulse-soft">Conectando...</span></template>
+              <template x-if="!loading">
+                <span class="flex items-center gap-2">Conectar <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7"/></svg></span>
+              </template>
+            </span>
+          </button>
+        </form>
+
+        <!-- Register Form -->
+        <form x-show="tab === 'register'" @submit.prevent="doRegister()" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Nome do Tenant</label>
+            <input type="text" x-model="tenantName" placeholder="Minha Empresa" class="w-full px-4 py-3 rounded-xl bg-[#E6E6E6] border border-neutral-300 text-sm font-space focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-colors" required/>
+          </div>
+          <button type="submit" :disabled="loading" class="w-full px-5 py-3 rounded-full border border-neutral-400 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors btn-press">
+            <template x-if="loading"><span class="animate-pulse-soft">Criando...</span></template>
+            <template x-if="!loading"><span>Criar Conta</span></template>
+          </button>
+          <!-- Show generated key -->
+          <div x-show="generatedKey" class="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-200">
+            <p class="text-xs font-semibold uppercase tracking-widest text-emerald-800 mb-2">Sua API Key (salve agora!)</p>
+            <div class="flex items-center gap-2">
+              <code class="flex-1 text-xs bg-white px-3 py-2 rounded-lg border break-all" x-text="generatedKey"></code>
+              <button @click="copyToClipboard(generatedKey)" class="p-2 rounded-lg hover:bg-emerald-100 transition-colors">
+                <svg class="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP LAYOUT (authenticated) -->
+  <div x-show="$store.auth.authenticated && $store.router.page !== 'login'" class="flex min-h-screen">
+
+    <!-- SIDEBAR -->
+    <aside :class="[
+      $store.ui.sidebarCollapsed ? 'w-16' : 'w-64',
+      $store.ui.sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+    ]" class="fixed lg:sticky top-0 h-screen bg-neutral-950 text-white z-50 sidebar-transition flex flex-col overflow-hidden">
+      <!-- Logo -->
+      <div class="px-4 py-5 flex items-center gap-3 border-b border-white/10">
+        <div class="flex gap-1 shrink-0">
+          <div class="w-2 h-6 bg-white rounded-full"></div>
+          <div class="w-2 h-4 bg-white rounded-full"></div>
+          <div class="w-2 h-6 bg-white rounded-full"></div>
+        </div>
+        <span x-show="!$store.ui.sidebarCollapsed" class="text-sm font-oswald font-medium tracking-wider uppercase">WPP Gateway</span>
+      </div>
+
+      <!-- Nav Links -->
+      <nav class="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+        <p x-show="!$store.ui.sidebarCollapsed" class="px-3 mb-2 text-[0.6rem] font-semibold uppercase tracking-widest text-neutral-500">Overview</p>
+        <a @click.prevent="$store.router.navigate('dashboard')" href="#/dashboard" :class="$store.router.page === 'dashboard' ? 'bg-white/10 text-white' : 'text-neutral-400 hover:text-white hover:bg-white/5'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors cursor-pointer">
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25a2.25 2.25 0 01-2.25-2.25v-2.25z"/></svg>
+          <span x-show="!$store.ui.sidebarCollapsed">Dashboard</span>
+        </a>
+
+        <p x-show="!$store.ui.sidebarCollapsed" class="px-3 mt-6 mb-2 text-[0.6rem] font-semibold uppercase tracking-widest text-neutral-500">Messaging</p>
+        <a @click.prevent="$store.router.navigate('groups')" href="#/groups" :class="$store.router.page === 'groups' || $store.router.page === 'group-detail' || $store.router.page === 'instance-detail' ? 'bg-white/10 text-white' : 'text-neutral-400 hover:text-white hover:bg-white/5'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors cursor-pointer">
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>
+          <span x-show="!$store.ui.sidebarCollapsed">Grupos</span>
+        </a>
+        <a @click.prevent="$store.router.navigate('broadcasts')" href="#/broadcasts" :class="$store.router.page === 'broadcasts' || $store.router.page === 'broadcast-detail' ? 'bg-white/10 text-white' : 'text-neutral-400 hover:text-white hover:bg-white/5'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors cursor-pointer">
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 001.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 010 3.46"/></svg>
+          <span x-show="!$store.ui.sidebarCollapsed">Broadcasts</span>
+        </a>
+      </nav>
+
+      <!-- Bottom: Account -->
+      <div class="border-t border-white/10 px-3 py-4">
+        <div x-show="!$store.ui.sidebarCollapsed" class="flex items-center justify-between">
+          <div class="min-w-0">
+            <p class="text-xs font-medium truncate" x-text="$store.auth.tenant?.name || 'Tenant'"></p>
+            <p class="text-[0.6rem] text-neutral-500 uppercase tracking-widest" x-text="$store.auth.tenant?.plan || 'free'"></p>
+          </div>
+          <button @click="$store.auth.logout()" class="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-colors" title="Sair">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
+          </button>
+        </div>
+        <button x-show="$store.ui.sidebarCollapsed" @click="$store.auth.logout()" class="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-colors w-full flex justify-center" title="Sair">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
+        </button>
+      </div>
+    </aside>
+
+    <!-- SIDEBAR OVERLAY (mobile) -->
+    <div x-show="$store.ui.sidebarOpen && window.innerWidth < 1024" @click="$store.ui.sidebarOpen = false" class="fixed inset-0 bg-black/30 z-40 lg:hidden"></div>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 min-w-0">
+      <!-- Top Bar -->
+      <header class="sticky top-0 z-30 bg-[#E6E6E6]/95 backdrop-blur-sm border-b border-neutral-300 px-4 lg:px-8 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <button @click="$store.ui.toggleSidebar()" class="p-2 rounded-xl hover:bg-neutral-300 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+          </button>
+          <h2 class="text-lg font-oswald font-medium tracking-tight capitalize" x-text="$store.router.page.replace('-', ' ')"></h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-xs text-neutral-500 uppercase tracking-widest hidden sm:block" x-text="$store.auth.tenant?.name"></span>
+          <div class="w-8 h-8 rounded-full bg-neutral-950 text-white flex items-center justify-center text-xs font-semibold" x-text="($store.auth.tenant?.name || 'U')[0].toUpperCase()"></div>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <div class="p-4 lg:p-8">
+
+        <!-- DASHBOARD PAGE -->
+        <div x-show="$store.router.page === 'dashboard'" x-data="dashboardPage()" x-effect="if($store.router.page === 'dashboard' && $store.auth.authenticated) load()">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <template x-for="card in cards" :key="card.label">
+              <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5 card-hover">
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500" x-text="card.label"></span>
+                  <div class="w-8 h-8 rounded-lg bg-neutral-300/50 flex items-center justify-center" x-html="card.icon"></div>
+                </div>
+                <p class="text-3xl font-oswald font-medium tracking-tight" x-text="card.value"></p>
+                <p class="text-xs text-neutral-500 mt-1" x-text="card.sub"></p>
+              </div>
+            </template>
+          </div>
+          <!-- Quick Actions -->
+          <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-6">
+            <h3 class="text-sm font-semibold uppercase tracking-widest text-neutral-800 mb-4">Acoes Rapidas</h3>
+            <div class="flex flex-wrap gap-3">
+              <button @click="$store.router.navigate('groups')" class="px-5 py-2 rounded-full border border-neutral-400 text-[0.7rem] font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors">Ver Grupos</button>
+              <button @click="$store.router.navigate('broadcasts')" class="px-5 py-2 rounded-full border border-neutral-400 text-[0.7rem] font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors">Broadcasts</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- GROUPS PAGE -->
+        <div x-show="$store.router.page === 'groups'" x-data="groupsPage()" x-effect="if($store.router.page === 'groups' && $store.auth.authenticated) load()">
+          <!-- Header -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div class="flex items-center gap-3">
+              <input type="text" x-model="search" @input="filterGroups()" placeholder="Buscar grupos..." class="px-4 py-2 rounded-xl bg-neutral-200/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500 w-64"/>
+            </div>
+            <button @click="showCreate = true; resetForm()" class="group transition-all duration-300 overflow-hidden font-medium text-neutral-200 bg-gradient-to-r from-neutral-700 to-neutral-800 rounded-full py-2.5 px-6 relative btn-press" style="box-shadow: 0 15px 33px -12px rgba(38,38,38,0.7), inset 0 4px 6.3px rgba(82,82,82,0.5), inset 0 -5px 6.3px rgba(23,23,23,0.8)">
+              <div class="group-hover:translate-y-0 transition-transform duration-300 bg-white/10 absolute inset-0 translate-y-full"></div>
+              <span class="relative flex items-center gap-2 text-xs font-semibold tracking-widest uppercase">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                Novo Grupo
+              </span>
+            </button>
+          </div>
+
+          <!-- Groups Grid -->
+          <div x-show="!loading && filtered.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <template x-for="group in filtered" :key="group.id">
+              <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5 card-hover cursor-pointer" @click="$store.router.navigate('group-detail', { groupId: group.id })">
+                <div class="flex items-start justify-between mb-3">
+                  <div class="min-w-0">
+                    <h3 class="text-sm font-semibold truncate" x-text="group.name"></h3>
+                    <p class="text-xs text-neutral-500 mt-0.5" x-text="formatDate(group.created_at)"></p>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <span :class="[getStrategyColor(group.strategy).bg, getStrategyColor(group.strategy).text]" class="px-2.5 py-1 rounded-full text-[0.6rem] font-semibold uppercase tracking-widest" x-text="getStrategyLabel(group.strategy)"></span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-4 text-xs text-neutral-600">
+                  <span class="flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"/></svg>
+                    <span x-text="(group._instanceCount || 0) + ' instancias'"></span>
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <div class="w-2 h-2 rounded-full" :class="group.is_active ? 'bg-emerald-500' : 'bg-neutral-400'"></div>
+                    <span x-text="group.is_active ? 'Ativo' : 'Inativo'"></span>
+                  </span>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <!-- Empty State -->
+          <div x-show="!loading && filtered.length === 0" class="text-center py-16">
+            <svg class="w-16 h-16 text-neutral-300 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>
+            <p class="text-sm text-neutral-500 uppercase tracking-widest">Nenhum grupo encontrado</p>
+            <p class="text-xs text-neutral-400 mt-1">Crie seu primeiro grupo para comecar</p>
+          </div>
+
+          <!-- Loading -->
+          <div x-show="loading" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <template x-for="i in 3">
+              <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
+                <div class="skeleton h-4 w-32 mb-3"></div>
+                <div class="skeleton h-3 w-24 mb-4"></div>
+                <div class="skeleton h-3 w-40"></div>
+              </div>
+            </template>
+          </div>
+
+          <!-- Create/Edit Modal -->
+          <div x-show="showCreate" x-transition.opacity class="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="showCreate = false">
+            <div class="bg-[#E6E6E6] rounded-2xl p-6 shadow-2xl max-w-lg w-full mx-4 animate-scale-in border border-neutral-300" @click.stop>
+              <h3 class="text-lg font-oswald font-medium tracking-tight mb-6" x-text="editId ? 'Editar Grupo' : 'Novo Grupo'"></h3>
+              <form @submit.prevent="saveGroup()" class="space-y-4">
+                <div>
+                  <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Nome</label>
+                  <input type="text" x-model="form.name" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500" required/>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Estrategia</label>
+                  <select x-model="form.strategy" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500">
+                    <option value="failover">Failover - Usa instancia backup em caso de falha</option>
+                    <option value="rotation">Rotation - Distribui entre instancias</option>
+                    <option value="hybrid">Hybrid - Combinacao de failover e rotation</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Webhook URL (opcional)</label>
+                  <input type="url" x-model="form.webhook_url" placeholder="https://..." class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                </div>
+                <div class="flex gap-3 justify-end pt-2">
+                  <button type="button" @click="showCreate = false" class="px-5 py-2 rounded-full border border-neutral-400 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors">Cancelar</button>
+                  <button type="submit" :disabled="saving" class="px-5 py-2 rounded-full bg-neutral-950 text-white text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800 transition-colors">
+                    <span x-text="saving ? 'Salvando...' : 'Salvar'"></span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- GROUP DETAIL PAGE -->
+        <div x-show="$store.router.page === 'group-detail'" x-data="groupDetailPage()" x-effect="if($store.router.page === 'group-detail') load($store.router.params.groupId)">
+          <!-- Back + Title -->
+          <div class="flex items-center gap-4 mb-6">
+            <button @click="$store.router.navigate('groups')" class="p-2 rounded-xl hover:bg-neutral-300 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+            </button>
+            <div class="min-w-0 flex-1">
+              <h2 class="text-2xl font-oswald font-medium tracking-tight" x-text="group?.name || 'Carregando...'"></h2>
+              <div class="flex items-center gap-3 mt-1">
+                <span :class="[getStrategyColor(group?.strategy).bg, getStrategyColor(group?.strategy).text]" class="px-2.5 py-0.5 rounded-full text-[0.6rem] font-semibold uppercase tracking-widest" x-text="getStrategyLabel(group?.strategy)" x-show="group"></span>
+                <span class="flex items-center gap-1 text-xs text-neutral-500">
+                  <div class="w-2 h-2 rounded-full" :class="group?.is_active ? 'bg-emerald-500' : 'bg-neutral-400'"></div>
+                  <span x-text="group?.is_active ? 'Ativo' : 'Inativo'"></span>
+                </span>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button x-show="group?.is_active" @click="doPause()" class="px-4 py-2 rounded-full border border-yellow-400 text-yellow-700 text-[0.7rem] font-semibold uppercase tracking-widest hover:bg-yellow-50 transition-colors">Pausar</button>
+              <button x-show="group && !group.is_active" @click="doResume()" class="px-4 py-2 rounded-full border border-emerald-400 text-emerald-700 text-[0.7rem] font-semibold uppercase tracking-widest hover:bg-emerald-50 transition-colors">Retomar</button>
+              <button @click="$store.ui.confirm('Tem certeza que deseja excluir este grupo?', () => doDelete())" class="px-4 py-2 rounded-full border border-red-300 text-red-600 text-[0.7rem] font-semibold uppercase tracking-widest hover:bg-red-50 transition-colors">Excluir</button>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div class="flex gap-1 mb-6 overflow-x-auto border-b border-neutral-300">
+            <template x-for="t in ['instancias', 'metricas', 'webhook', 'blacklist']" :key="t">
+              <button @click="tab = t" :class="tab === t ? 'border-b-2 border-neutral-950 text-neutral-950' : 'text-neutral-500 hover:text-neutral-700'" class="px-4 py-3 text-xs font-semibold uppercase tracking-widest whitespace-nowrap transition-colors" x-text="t"></button>
+            </template>
+          </div>
+
+          <!-- Instances Tab -->
+          <div x-show="tab === 'instancias'">
+            <div class="flex justify-between items-center mb-4">
+              <p class="text-xs text-neutral-500 uppercase tracking-widest" x-text="instances.length + ' instancias'"></p>
+              <button @click="showAddInstance = true; resetInstanceForm()" class="px-4 py-2 rounded-full bg-neutral-950 text-white text-[0.7rem] font-semibold uppercase tracking-widest hover:bg-neutral-800 transition-colors">
+                <span class="flex items-center gap-2">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                  Adicionar
+                </span>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <template x-for="inst in instances" :key="inst.id">
+                <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5 card-hover">
+                  <div class="flex items-start justify-between mb-3">
+                    <div class="min-w-0">
+                      <h4 class="text-sm font-semibold truncate" x-text="inst.display_name || 'Instancia'"></h4>
+                      <p class="text-xs text-neutral-500 mt-0.5" x-text="formatPhone(inst.phone_number)"></p>
+                    </div>
+                    <span :class="[getStatusColor(inst.status).bg, getStatusColor(inst.status).text]" class="px-2.5 py-1 rounded-full text-[0.6rem] font-semibold uppercase tracking-widest flex items-center gap-1.5 shrink-0">
+                      <div class="w-1.5 h-1.5 rounded-full" :class="getStatusColor(inst.status).dot"></div>
+                      <span x-text="getStatusLabel(inst.status)"></span>
+                    </span>
+                  </div>
+                  <div class="grid grid-cols-2 gap-2 text-xs text-neutral-600 mb-4">
+                    <div><span class="text-neutral-400">Msgs Hoje:</span> <span x-text="inst.messages_today || 0"></span>/<span x-text="inst.daily_budget || 0"></span></div>
+                    <div><span class="text-neutral-400">Entrega:</span> <span x-text="formatPercent(inst.delivery_rate)"></span></div>
+                    <div><span class="text-neutral-400">Prioridade:</span> <span x-text="inst.priority || 0"></span></div>
+                    <div><span class="text-neutral-400">Budget/h:</span> <span x-text="inst.hourly_budget || 0"></span></div>
+                  </div>
+                  <div class="flex gap-2">
+                    <button @click="$store.router.navigate('instance-detail', { groupId: $store.router.params.groupId, instanceId: inst.id })" class="flex-1 px-3 py-1.5 rounded-lg border border-neutral-300 text-[0.65rem] font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors text-center">Detalhes</button>
+                    <template x-if="inst.status === 'disconnected'">
+                      <button @click="connectInst(inst.id)" class="flex-1 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[0.65rem] font-semibold uppercase tracking-widest hover:bg-emerald-700 transition-colors text-center">Conectar</button>
+                    </template>
+                    <template x-if="inst.status === 'available'">
+                      <button @click="disconnectInst(inst.id)" class="flex-1 px-3 py-1.5 rounded-lg bg-neutral-600 text-white text-[0.65rem] font-semibold uppercase tracking-widest hover:bg-neutral-700 transition-colors text-center">Desconectar</button>
+                    </template>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <!-- Empty instances -->
+            <div x-show="instances.length === 0 && !loading" class="text-center py-12">
+              <svg class="w-12 h-12 text-neutral-300 mx-auto mb-3" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"/></svg>
+              <p class="text-sm text-neutral-500 uppercase tracking-widest">Nenhuma instancia</p>
+              <p class="text-xs text-neutral-400 mt-1">Adicione uma instancia para comecar</p>
+            </div>
+
+            <!-- Add Instance Modal -->
+            <div x-show="showAddInstance" x-transition.opacity class="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="showAddInstance = false">
+              <div class="bg-[#E6E6E6] rounded-2xl p-6 shadow-2xl max-w-lg w-full mx-4 animate-scale-in border border-neutral-300" @click.stop>
+                <h3 class="text-lg font-oswald font-medium tracking-tight mb-6">Nova Instancia</h3>
+                <form @submit.prevent="addInstance()" class="space-y-4">
+                  <div>
+                    <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Nome</label>
+                    <input type="text" x-model="instForm.display_name" placeholder="Celular 01" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                  </div>
+                  <div class="grid grid-cols-3 gap-4">
+                    <div>
+                      <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Prioridade</label>
+                      <input type="number" x-model.number="instForm.priority" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Budget/dia</label>
+                      <input type="number" x-model.number="instForm.daily_budget" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Budget/hora</label>
+                      <input type="number" x-model.number="instForm.hourly_budget" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                    </div>
+                  </div>
+                  <div class="flex gap-3 justify-end pt-2">
+                    <button type="button" @click="showAddInstance = false" class="px-5 py-2 rounded-full border border-neutral-400 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 rounded-full bg-neutral-950 text-white text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800 transition-colors">Criar</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Metrics Tab -->
+          <div x-show="tab === 'metricas'">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
+                <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Enviadas</p>
+                <p class="text-2xl font-oswald font-medium" x-text="formatNumber(metrics?.sent || 0)"></p>
+              </div>
+              <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
+                <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Entregues</p>
+                <p class="text-2xl font-oswald font-medium" x-text="formatNumber(metrics?.delivered || 0)"></p>
+              </div>
+              <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
+                <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Falharam</p>
+                <p class="text-2xl font-oswald font-medium text-red-600" x-text="formatNumber(metrics?.failed || 0)"></p>
+              </div>
+              <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
+                <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Taxa Entrega</p>
+                <p class="text-2xl font-oswald font-medium" x-text="formatPercent(metrics?.delivery_rate || 0)"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Webhook Tab -->
+          <div x-show="tab === 'webhook'" x-data="{ webhookForm: { url: '', events: [] }, whLoading: false, whLoaded: false }" x-effect="
+            if(tab === 'webhook' && $store.router.params.groupId && !whLoaded) { whLoaded = true; Api.getWebhook($store.router.params.groupId).then(r => { if(r?.data) { webhookForm.url = r.data.webhook_url || ''; webhookForm.events = r.data.webhook_events || [] }}).catch(() => {}) }
+          ">
+            <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-6 max-w-xl">
+              <h3 class="text-sm font-semibold uppercase tracking-widest text-neutral-800 mb-4">Configuracao de Webhook</h3>
+              <form @submit.prevent="
+                whLoading = true;
+                Api.configureWebhook($store.router.params.groupId, webhookForm)
+                  .then(() => $store.toast.show('success', 'Webhook configurado'))
+                  .catch(e => $store.toast.show('error', e.message))
+                  .finally(() => whLoading = false)
+              " class="space-y-4">
+                <div>
+                  <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">URL</label>
+                  <input type="url" x-model="webhookForm.url" placeholder="https://..." class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                </div>
+                <div class="flex gap-3 items-center">
+                  <button type="submit" :disabled="whLoading" class="px-5 py-2 rounded-full bg-neutral-950 text-white text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800 transition-colors">Salvar</button>
+                  <button type="button" @click="
+                    Api.testWebhook($store.router.params.groupId)
+                      .then(() => $store.toast.show('success', 'Webhook de teste enviado'))
+                      .catch(e => $store.toast.show('error', e.message))
+                  " class="px-5 py-2 rounded-full border border-neutral-400 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors">Testar</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Blacklist Tab -->
+          <div x-show="tab === 'blacklist'" x-data="{ blNumbers: '', blItems: [], blLoading: false, blLoaded: false }" x-effect="
+            if(tab === 'blacklist' && $store.router.params.groupId && !blLoaded) { blLoaded = true; Api.listBlacklist($store.router.params.groupId).then(r => blItems = r?.data || []).catch(() => {}) }
+          ">
+            <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-6 max-w-xl mb-4">
+              <h3 class="text-sm font-semibold uppercase tracking-widest text-neutral-800 mb-4">Adicionar Numeros</h3>
+              <div class="flex gap-3">
+                <input type="text" x-model="blNumbers" placeholder="5511999999999, 5511888888888" class="flex-1 px-4 py-2 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                <button @click="
+                  const nums = blNumbers.split(',').map(n => n.trim()).filter(Boolean);
+                  if(nums.length) {
+                    Api.addToBlacklist($store.router.params.groupId, nums, 'manual')
+                      .then(() => { $store.toast.show('success', 'Numeros adicionados'); blNumbers = ''; Api.listBlacklist($store.router.params.groupId).then(r => blItems = r?.data || []) })
+                      .catch(e => $store.toast.show('error', e.message))
+                  }
+                " class="px-4 py-2 rounded-full bg-neutral-950 text-white text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800">Adicionar</button>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <template x-for="item in blItems" :key="item.number || item">
+                <div class="flex items-center justify-between bg-neutral-200/50 rounded-xl border border-neutral-300 px-4 py-3">
+                  <span class="text-sm font-mono" x-text="item.number || item"></span>
+                  <button @click="
+                    Api.removeFromBlacklist($store.router.params.groupId, item.number || item)
+                      .then(() => { blItems = blItems.filter(b => (b.number || b) !== (item.number || item)); $store.toast.show('success', 'Removido') })
+                      .catch(e => $store.toast.show('error', e.message))
+                  " class="text-red-500 hover:text-red-700 p-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- INSTANCE DETAIL PAGE -->
+        <div x-show="$store.router.page === 'instance-detail'" x-data="instanceDetailPage()" x-effect="if($store.router.page === 'instance-detail') load($store.router.params.instanceId)">
+          <!-- Back + Title -->
+          <div class="flex items-center gap-4 mb-6">
+            <button @click="$store.router.navigate('group-detail', { groupId: $store.router.params.groupId })" class="p-2 rounded-xl hover:bg-neutral-300 transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+            </button>
+            <div class="min-w-0 flex-1">
+              <h2 class="text-2xl font-oswald font-medium tracking-tight" x-text="instance?.display_name || 'Instancia'"></h2>
+              <p class="text-xs text-neutral-500 mt-0.5" x-text="formatPhone(instance?.phone_number)"></p>
+            </div>
+            <span x-show="instance" :class="[getStatusColor(instance?.status).bg, getStatusColor(instance?.status).text]" class="px-3 py-1.5 rounded-full text-[0.7rem] font-semibold uppercase tracking-widest flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full status-dot-pulse" :class="getStatusColor(instance?.status).dot"></div>
+              <span x-text="getStatusLabel(instance?.status)"></span>
+            </span>
+          </div>
+
+          <!-- Info Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
+              <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Msgs Hoje</p>
+              <p class="text-2xl font-oswald font-medium"><span x-text="instance?.messages_today || 0"></span> <span class="text-sm text-neutral-400">/ <span x-text="instance?.daily_budget || 0"></span></span></p>
+            </div>
+            <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
+              <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Taxa Entrega</p>
+              <p class="text-2xl font-oswald font-medium" x-text="formatPercent(instance?.delivery_rate)"></p>
+            </div>
+            <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
+              <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Prioridade</p>
+              <p class="text-2xl font-oswald font-medium" x-text="instance?.priority || 0"></p>
+            </div>
+            <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
+              <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Budget/hora</p>
+              <p class="text-2xl font-oswald font-medium" x-text="instance?.hourly_budget || 0"></p>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex flex-wrap gap-3 mb-6">
+            <template x-if="instance?.status === 'disconnected'">
+              <button @click="doConnect()" class="px-5 py-2 rounded-full bg-emerald-600 text-white text-xs font-semibold uppercase tracking-widest hover:bg-emerald-700 transition-colors btn-press">Conectar</button>
+            </template>
+            <template x-if="instance?.status === 'available'">
+              <button @click="doDisconnect()" class="px-5 py-2 rounded-full bg-neutral-600 text-white text-xs font-semibold uppercase tracking-widest hover:bg-neutral-700 transition-colors btn-press">Desconectar</button>
+            </template>
+            <button @click="doRestart()" class="px-5 py-2 rounded-full border border-neutral-400 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors btn-press">Reiniciar</button>
+            <button @click="showQR = true; loadQR()" class="px-5 py-2 rounded-full border border-neutral-400 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors btn-press">QR Code</button>
+            <button @click="$store.ui.confirm('Tem certeza que deseja excluir esta instancia?', () => doDeleteInstance())" class="px-5 py-2 rounded-full border border-red-300 text-red-600 text-xs font-semibold uppercase tracking-widest hover:bg-red-50 transition-colors btn-press">Excluir</button>
+          </div>
+
+          <!-- QR Code Modal -->
+          <div x-show="showQR" x-transition.opacity class="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="showQR = false; stopQRPolling()">
+            <div class="bg-[#E6E6E6] rounded-2xl p-8 shadow-2xl max-w-sm w-full mx-4 animate-scale-in border border-neutral-300 text-center" @click.stop>
+              <h3 class="text-lg font-oswald font-medium tracking-tight mb-2">Escanear QR Code</h3>
+              <p class="text-xs text-neutral-500 uppercase tracking-widest mb-6">Abra o WhatsApp e escaneie o codigo</p>
+              <div x-show="qrLoading" class="py-8">
+                <div class="skeleton w-48 h-48 mx-auto rounded-xl"></div>
+              </div>
+              <div x-show="qrData && !qrLoading" class="qr-container inline-block mb-4">
+                <img :src="'data:image/png;base64,' + qrData" class="w-48 h-48" alt="QR Code"/>
+              </div>
+              <div x-show="qrError && !qrLoading" class="py-8 text-sm text-neutral-500" x-text="qrError"></div>
+              <div class="mt-4 flex justify-center gap-3">
+                <button @click="loadQR()" class="px-4 py-2 rounded-full border border-neutral-400 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors">Recarregar</button>
+                <button @click="showQR = false; stopQRPolling()" class="px-4 py-2 rounded-full bg-neutral-950 text-white text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800 transition-colors">Fechar</button>
+              </div>
+              <!-- Pairing alternative -->
+              <div class="mt-6 pt-4 border-t border-neutral-300">
+                <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 mb-3">Ou pareie com codigo</p>
+                <div class="flex gap-2">
+                  <input type="text" x-model="pairPhone" placeholder="5511999999999" class="flex-1 px-3 py-2 rounded-lg bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                  <button @click="doPair()" class="px-4 py-2 rounded-lg bg-neutral-950 text-white text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800">Parear</button>
+                </div>
+                <p x-show="pairCode" class="mt-2 text-lg font-mono font-bold tracking-wider" x-text="pairCode"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BROADCASTS PAGE -->
+        <div x-show="$store.router.page === 'broadcasts'" x-data="broadcastsPage()" x-effect="if($store.router.page === 'broadcasts' && $store.auth.authenticated) load()">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Grupo</label>
+              <select x-model="selectedGroup" @change="loadBroadcasts()" class="px-4 py-2 rounded-xl bg-neutral-200/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500">
+                <option value="">Selecione um grupo</option>
+                <template x-for="g in groups" :key="g.id">
+                  <option :value="g.id" x-text="g.name"></option>
+                </template>
+              </select>
+            </div>
+          </div>
+
+          <div x-show="selectedGroup && broadcasts.length > 0" class="space-y-3">
+            <template x-for="bc in broadcasts" :key="bc.id">
+              <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
+                <div class="flex items-center justify-between mb-3">
+                  <div>
+                    <p class="text-xs font-mono text-neutral-500" x-text="bc.id?.slice(0, 8) + '...'"></p>
+                    <p class="text-xs text-neutral-400 mt-0.5" x-text="formatDateTime(bc.created_at)"></p>
+                  </div>
+                  <span :class="[BroadcastStatusColors[bc.status]?.bg, BroadcastStatusColors[bc.status]?.text]" class="px-2.5 py-1 rounded-full text-[0.6rem] font-semibold uppercase tracking-widest" x-text="BroadcastStatusLabels[bc.status] || bc.status"></span>
+                </div>
+                <!-- Progress bar -->
+                <div class="w-full bg-neutral-300 rounded-full h-2 mb-2">
+                  <div class="bg-emerald-500 h-2 rounded-full progress-bar" :style="'width: ' + (bc.total > 0 ? (bc.sent / bc.total * 100) : 0) + '%'"></div>
+                </div>
+                <div class="flex items-center justify-between text-xs text-neutral-500">
+                  <span><span x-text="bc.sent || 0"></span>/<span x-text="bc.total || 0"></span> enviadas</span>
+                  <span><span x-text="bc.delivered || 0"></span> entregues</span>
+                  <span class="text-red-500"><span x-text="bc.failed || 0"></span> falhas</span>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <div x-show="selectedGroup && broadcasts.length === 0 && !loading" class="text-center py-12">
+            <p class="text-sm text-neutral-500 uppercase tracking-widest">Nenhum broadcast encontrado</p>
+          </div>
+          <div x-show="!selectedGroup" class="text-center py-12">
+            <p class="text-sm text-neutral-500 uppercase tracking-widest">Selecione um grupo para ver broadcasts</p>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- PAGE COMPONENTS (Alpine.js) -->
+  <script>
+    function loginPage() {
+      return {
+        tab: 'login',
+        apiKey: '',
+        showKey: false,
+        tenantName: '',
+        generatedKey: '',
+        loading: false,
+
+        async doLogin() {
+          if (!this.apiKey.trim()) return
+          this.loading = true
+          try {
+            await Alpine.store('auth').login(this.apiKey.trim())
+          } catch (err) {
+            Alpine.store('toast').show('error', 'API key invalida')
+          } finally {
+            this.loading = false
+          }
+        },
+
+        async doRegister() {
+          if (!this.tenantName.trim()) return
+          this.loading = true
+          try {
+            const res = await Api.register(this.tenantName.trim())
+            if (res.success && res.data?.api_key) {
+              this.generatedKey = res.data.api_key
+              Alpine.store('toast').show('success', 'Conta criada! Salve sua API key.')
+            } else {
+              Alpine.store('toast').show('error', res.error?.message || 'Erro ao criar conta')
+            }
+          } catch (err) {
+            Alpine.store('toast').show('error', err.message)
+          } finally {
+            this.loading = false
+          }
+        },
+      }
+    }
+
+    function dashboardPage() {
+      return {
+        cards: [],
+        loading: true,
+        _loaded: false,
+
+        async load() {
+          if (this._loaded) return
+          this._loaded = true
+          this.loading = true
+          try {
+            const usage = await Api.getUsage()
+            const d = usage?.data || {}
+            this.cards = [
+              { label: 'Grupos', value: d.groups_count || 0, sub: 'Total de grupos', icon: '<svg class="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584"/></svg>' },
+              { label: 'Instancias', value: d.instances_count || 0, sub: 'Total de instancias', icon: '<svg class="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3"/></svg>' },
+              { label: 'Disponveis', value: d.available_count || 0, sub: 'Instancias ativas', icon: '<svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' },
+              { label: 'Banidas', value: d.banned_count || 0, sub: 'Instancias banidas', icon: '<svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>' },
+            ]
+          } catch (err) {
+            Alpine.store('toast').show('error', 'Erro ao carregar dashboard')
+          } finally {
+            this.loading = false
+          }
+        },
+      }
+    }
+
+    function groupsPage() {
+      return {
+        groups: [],
+        filtered: [],
+        search: '',
+        loading: true,
+        _loaded: false,
+        showCreate: false,
+        saving: false,
+        editId: null,
+        form: { name: '', strategy: 'failover', webhook_url: '' },
+
+        async load() {
+          if (this._loaded) return
+          this._loaded = true
+          this.loading = true
+          try {
+            const res = await Api.listGroups()
+            this.groups = res?.data || []
+            this.filtered = [...this.groups]
+          } catch (err) {
+            Alpine.store('toast').show('error', 'Erro ao carregar grupos')
+          } finally {
+            this.loading = false
+          }
+        },
+
+        filterGroups() {
+          const q = this.search.toLowerCase()
+          this.filtered = this.groups.filter(g => g.name.toLowerCase().includes(q))
+        },
+
+        resetForm() {
+          this.form = { name: '', strategy: 'failover', webhook_url: '' }
+          this.editId = null
+        },
+
+        async saveGroup() {
+          this.saving = true
+          try {
+            if (this.editId) {
+              await Api.updateGroup(this.editId, this.form)
+              Alpine.store('toast').show('success', 'Grupo atualizado')
+            } else {
+              await Api.createGroup(this.form)
+              Alpine.store('toast').show('success', 'Grupo criado')
+            }
+            this.showCreate = false
+            await this.load()
+          } catch (err) {
+            Alpine.store('toast').show('error', err.message)
+          } finally {
+            this.saving = false
+          }
+        },
+      }
+    }
+
+    function groupDetailPage() {
+      return {
+        group: null,
+        instances: [],
+        metrics: null,
+        tab: 'instancias',
+        loading: true,
+        showAddInstance: false,
+        instForm: { display_name: '', priority: 1, daily_budget: 200, hourly_budget: 30 },
+        _lastGroupId: null,
+
+        async load(groupId) {
+          if (!groupId || groupId === this._lastGroupId) return
+          this._lastGroupId = groupId
+          this.loading = true
+          try {
+            const [groupRes, instancesRes] = await Promise.all([
+              Api.getGroup(groupId),
+              Api.listInstances(groupId),
+            ])
+            this.group = groupRes?.data
+            this.instances = instancesRes?.data || []
+            Api.getGroupMetrics(groupId).then(r => this.metrics = r?.data).catch(() => {})
+          } catch (err) {
+            Alpine.store('toast').show('error', 'Erro ao carregar grupo')
+          } finally {
+            this.loading = false
+          }
+        },
+
+        resetInstanceForm() {
+          this.instForm = { display_name: '', priority: 1, daily_budget: 200, hourly_budget: 30 }
+        },
+
+        async addInstance() {
+          try {
+            await Api.createInstance(this._lastGroupId, this.instForm)
+            Alpine.store('toast').show('success', 'Instancia criada')
+            this.showAddInstance = false
+            const res = await Api.listInstances(this._lastGroupId)
+            this.instances = res?.data || []
+          } catch (err) {
+            Alpine.store('toast').show('error', err.message)
+          }
+        },
+
+        async connectInst(id) {
+          try {
+            await Api.connectInstance(id)
+            Alpine.store('toast').show('success', 'Conectando...')
+            setTimeout(() => this.refreshInstances(), 2000)
+          } catch (err) {
+            Alpine.store('toast').show('error', err.message)
+          }
+        },
+
+        async disconnectInst(id) {
+          try {
+            await Api.disconnectInstance(id)
+            Alpine.store('toast').show('success', 'Desconectado')
+            setTimeout(() => this.refreshInstances(), 1000)
+          } catch (err) {
+            Alpine.store('toast').show('error', err.message)
+          }
+        },
+
+        async refreshInstances() {
+          const res = await Api.listInstances(this._lastGroupId)
+          this.instances = res?.data || []
+        },
+
+        async doPause() {
+          try {
+            await Api.pauseGroup(this._lastGroupId)
+            this.group = { ...this.group, is_active: false }
+            Alpine.store('toast').show('success', 'Grupo pausado')
+          } catch (err) { Alpine.store('toast').show('error', err.message) }
+        },
+
+        async doResume() {
+          try {
+            await Api.resumeGroup(this._lastGroupId)
+            this.group = { ...this.group, is_active: true }
+            Alpine.store('toast').show('success', 'Grupo retomado')
+          } catch (err) { Alpine.store('toast').show('error', err.message) }
+        },
+
+        async doDelete() {
+          try {
+            await Api.deleteGroup(this._lastGroupId)
+            Alpine.store('toast').show('success', 'Grupo excluido')
+            this._lastGroupId = null
+            Alpine.store('router').navigate('groups')
+          } catch (err) { Alpine.store('toast').show('error', err.message) }
+        },
+      }
+    }
+
+    function instanceDetailPage() {
+      return {
+        instance: null,
+        loading: true,
+        showQR: false,
+        qrData: null,
+        qrLoading: false,
+        qrError: '',
+        qrInterval: null,
+        pairPhone: '',
+        pairCode: '',
+        _lastId: null,
+
+        async load(instanceId) {
+          if (!instanceId || instanceId === this._lastId) return
+          this._lastId = instanceId
+          this.loading = true
+          try {
+            const res = await Api.getInstance(instanceId)
+            this.instance = res?.data
+          } catch (err) {
+            Alpine.store('toast').show('error', 'Erro ao carregar instancia')
+          } finally {
+            this.loading = false
+          }
+        },
+
+        async loadQR() {
+          this.qrLoading = true
+          this.qrError = ''
+          this.qrData = null
+          try {
+            const res = await Api.getQRCode(this._lastId)
+            this.qrData = res?.data?.qr_base64
+            if (!this.qrData) {
+              this.qrError = res?.data?.status === 'already_connected' ? 'Ja conectado!' : 'QR code nao disponivel'
+              if (res?.data?.status === 'already_connected') {
+                this.showQR = false
+                await this.load(this._lastId)
+                this._lastId = null
+                await this.load(Alpine.store('router').params.instanceId)
+              }
+            }
+            this.startQRPolling()
+          } catch (err) {
+            this.qrError = err.message
+          } finally {
+            this.qrLoading = false
+          }
+        },
+
+        startQRPolling() {
+          this.stopQRPolling()
+          this.qrInterval = setInterval(async () => {
+            try {
+              const status = await Api.getInstanceStatus(this._lastId)
+              if (status?.data?.status === 'available') {
+                this.showQR = false
+                this.stopQRPolling()
+                Alpine.store('toast').show('success', 'WhatsApp conectado!')
+                this._lastId = null
+                await this.load(Alpine.store('router').params.instanceId)
+              }
+            } catch {}
+          }, 5000)
+        },
+
+        stopQRPolling() {
+          if (this.qrInterval) {
+            clearInterval(this.qrInterval)
+            this.qrInterval = null
+          }
+        },
+
+        async doConnect() {
+          try {
+            await Api.connectInstance(this._lastId)
+            Alpine.store('toast').show('success', 'Conectando...')
+            this.showQR = true
+            this.loadQR()
+          } catch (err) { Alpine.store('toast').show('error', err.message) }
+        },
+
+        async doDisconnect() {
+          try {
+            await Api.disconnectInstance(this._lastId)
+            this.instance = { ...this.instance, status: 'disconnected' }
+            Alpine.store('toast').show('success', 'Desconectado')
+          } catch (err) { Alpine.store('toast').show('error', err.message) }
+        },
+
+        async doRestart() {
+          try {
+            await Api.restartInstance(this._lastId)
+            Alpine.store('toast').show('info', 'Reiniciando...')
+            setTimeout(async () => {
+              this._lastId = null
+              await this.load(Alpine.store('router').params.instanceId)
+            }, 3000)
+          } catch (err) { Alpine.store('toast').show('error', err.message) }
+        },
+
+        async doPair() {
+          if (!this.pairPhone.trim()) return
+          try {
+            const res = await Api.pairPhone(this._lastId, this.pairPhone.trim())
+            this.pairCode = res?.data?.code || res?.data?.pairing_code || ''
+            if (this.pairCode) {
+              Alpine.store('toast').show('success', 'Codigo gerado! Digite no WhatsApp.')
+            }
+          } catch (err) { Alpine.store('toast').show('error', err.message) }
+        },
+
+        async doDeleteInstance() {
+          try {
+            await Api.deleteInstance(this._lastId)
+            Alpine.store('toast').show('success', 'Instancia excluida')
+            Alpine.store('router').navigate('group-detail', { groupId: Alpine.store('router').params.groupId })
+          } catch (err) { Alpine.store('toast').show('error', err.message) }
+        },
+      }
+    }
+
+    function broadcastsPage() {
+      return {
+        groups: [],
+        broadcasts: [],
+        selectedGroup: '',
+        loading: false,
+        _loaded: false,
+
+        async load() {
+          if (this._loaded) return
+          this._loaded = true
+          try {
+            const res = await Api.listGroups()
+            this.groups = res?.data || []
+          } catch {}
+        },
+
+        async loadBroadcasts() {
+          if (!this.selectedGroup) { this.broadcasts = []; return }
+          this.loading = true
+          try {
+            const res = await Api.listBroadcasts(this.selectedGroup)
+            this.broadcasts = res?.data || []
+          } catch (err) {
+            Alpine.store('toast').show('error', err.message)
+          } finally {
+            this.loading = false
+          }
+        },
+      }
+    }
+  </script>
+</body>
+</html>

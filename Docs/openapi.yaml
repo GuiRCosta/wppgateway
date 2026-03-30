@@ -1,0 +1,760 @@
+openapi: 3.0.3
+info:
+  title: WPP Gateway API
+  description: WhatsApp Gateway API with Instance Groups, broadcast, anti-ban, and observability
+  version: 1.0.0
+  contact:
+    name: WPP Gateway
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+security:
+  - ApiKeyAuth: []
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    ErrorDetail:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+
+    Meta:
+      type: object
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+
+    Tenant:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        plan:
+          type: string
+        max_groups:
+          type: integer
+        max_instances:
+          type: integer
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    Group:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        strategy:
+          type: string
+          enum: [failover, rotation, hybrid]
+        config:
+          type: object
+        webhook_url:
+          type: string
+        webhook_events:
+          type: array
+          items:
+            type: string
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    Instance:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        group_id:
+          type: string
+          format: uuid
+        phone_number:
+          type: string
+        display_name:
+          type: string
+        status:
+          type: string
+          enum: [disconnected, connecting, available, resting, warming, suspect, banned]
+        priority:
+          type: integer
+        daily_budget:
+          type: integer
+        hourly_budget:
+          type: integer
+        messages_today:
+          type: integer
+        delivery_rate:
+          type: number
+        created_at:
+          type: string
+          format: date-time
+
+    SendMessage:
+      type: object
+      required: [to, type, content]
+      properties:
+        to:
+          type: string
+          example: "5511999999999"
+        type:
+          type: string
+          enum: [text, image, video, audio, document, sticker, location, contact, reaction, poll]
+        content:
+          type: object
+          example: { body: "Hello!" }
+
+    Broadcast:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        group_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, processing, paused, completed, cancelled, failed]
+        total:
+          type: integer
+        sent:
+          type: integer
+        delivered:
+          type: integer
+        failed:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    CreateBroadcast:
+      type: object
+      required: [recipients, type, content]
+      properties:
+        recipients:
+          type: array
+          items:
+            type: string
+        type:
+          type: string
+        content:
+          type: object
+        variables:
+          type: object
+        options:
+          type: object
+          properties:
+            shuffle_recipients:
+              type: boolean
+            spintax:
+              type: boolean
+            schedule_at:
+              type: string
+              format: date-time
+
+    GroupStatus:
+      type: object
+      properties:
+        group_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        strategy:
+          type: string
+        is_active:
+          type: boolean
+        is_paused:
+          type: boolean
+        available:
+          type: integer
+        resting:
+          type: integer
+        banned:
+          type: integer
+        total_budget:
+          type: integer
+        total_sent_today:
+          type: integer
+        instances:
+          type: array
+          items:
+            type: object
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      security: []
+      responses:
+        '200':
+          description: OK
+
+  /metrics:
+    get:
+      tags: [Health]
+      summary: Prometheus metrics
+      security: []
+      responses:
+        '200':
+          description: Prometheus text format
+
+  /v1/tenants:
+    post:
+      tags: [Tenants]
+      summary: Create tenant
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        '201':
+          description: Tenant created with API key
+
+  /v1/health/detailed:
+    get:
+      tags: [Health]
+      summary: Detailed health with dependencies
+      responses:
+        '200':
+          description: Dependency status
+
+  /v1/account:
+    get:
+      tags: [Account]
+      summary: Get account info
+      responses:
+        '200':
+          description: Tenant details
+    patch:
+      tags: [Account]
+      summary: Update account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        '200':
+          description: Updated tenant
+
+  /v1/account/usage:
+    get:
+      tags: [Account]
+      summary: Get usage stats
+      responses:
+        '200':
+          description: Groups and instances count
+
+  /v1/account/audit-log:
+    get:
+      tags: [Account]
+      summary: Get audit log
+      parameters:
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Audit entries
+
+  /v1/groups:
+    post:
+      tags: [Groups]
+      summary: Create group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, strategy]
+              properties:
+                name:
+                  type: string
+                strategy:
+                  type: string
+                  enum: [failover, rotation, hybrid]
+                config:
+                  type: object
+                webhook_url:
+                  type: string
+                webhook_events:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Group created
+    get:
+      tags: [Groups]
+      summary: List groups
+      responses:
+        '200':
+          description: Groups list
+
+  /v1/groups/{groupId}:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Groups]
+      summary: Get group
+      responses:
+        '200':
+          description: Group details
+    patch:
+      tags: [Groups]
+      summary: Update group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Updated group
+    delete:
+      tags: [Groups]
+      summary: Delete group
+      responses:
+        '204':
+          description: Deleted
+
+  /v1/groups/{groupId}/status:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Groups]
+      summary: Get consolidated group status
+      responses:
+        '200':
+          description: Group status with instances
+
+  /v1/groups/{groupId}/pause:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [Groups]
+      summary: Pause group dispatching
+      responses:
+        '200':
+          description: Group paused
+
+  /v1/groups/{groupId}/resume:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [Groups]
+      summary: Resume group dispatching
+      responses:
+        '200':
+          description: Group resumed
+
+  /v1/groups/{groupId}/instances:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [Instances]
+      summary: Add instance to group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                display_name:
+                  type: string
+                priority:
+                  type: integer
+                daily_budget:
+                  type: integer
+                hourly_budget:
+                  type: integer
+      responses:
+        '201':
+          description: Instance created
+    get:
+      tags: [Instances]
+      summary: List instances in group
+      responses:
+        '200':
+          description: Instances list
+
+  /v1/instances/{instanceId}:
+    parameters:
+      - name: instanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Instances]
+      summary: Get instance details
+      responses:
+        '200':
+          description: Instance details
+    patch:
+      tags: [Instances]
+      summary: Update instance config
+      responses:
+        '200':
+          description: Updated instance
+    delete:
+      tags: [Instances]
+      summary: Remove instance
+      responses:
+        '204':
+          description: Deleted
+
+  /v1/instances/{instanceId}/qrcode:
+    parameters:
+      - name: instanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Instances]
+      summary: Get QR code for WhatsApp connection
+      responses:
+        '200':
+          description: QR code data and base64 image
+
+  /v1/instances/{instanceId}/pair:
+    parameters:
+      - name: instanceId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [Instances]
+      summary: Pair via phone code
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone]
+              properties:
+                phone:
+                  type: string
+      responses:
+        '200':
+          description: Pairing code
+
+  /v1/instances/{instanceId}/connect:
+    post:
+      tags: [Instances]
+      summary: Connect with existing session
+      responses:
+        '200':
+          description: Connection status
+
+  /v1/instances/{instanceId}/disconnect:
+    post:
+      tags: [Instances]
+      summary: Disconnect instance
+      responses:
+        '200':
+          description: Disconnected
+
+  /v1/instances/{instanceId}/restart:
+    post:
+      tags: [Instances]
+      summary: Restart instance
+      responses:
+        '200':
+          description: Restarting
+
+  /v1/instances/{instanceId}/status:
+    get:
+      tags: [Instances]
+      summary: Get instance connection status
+      responses:
+        '200':
+          description: Status with WS state
+
+  /v1/groups/{groupId}/messages/send:
+    post:
+      tags: [Messages]
+      summary: Send single message via group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendMessage'
+      responses:
+        '200':
+          description: Message sent
+
+  /v1/groups/{groupId}/messages:
+    get:
+      tags: [Messages]
+      summary: List messages
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Messages list
+
+  /v1/groups/{groupId}/messages/{messageId}/status:
+    get:
+      tags: [Messages]
+      summary: Get message delivery status
+      responses:
+        '200':
+          description: Message status
+
+  /v1/groups/{groupId}/messages/broadcast:
+    post:
+      tags: [Broadcast]
+      summary: Create broadcast
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBroadcast'
+      responses:
+        '201':
+          description: Broadcast created
+    get:
+      tags: [Broadcast]
+      summary: List broadcasts
+      responses:
+        '200':
+          description: Broadcasts list
+
+  /v1/groups/{groupId}/messages/broadcast/{broadcastId}:
+    get:
+      tags: [Broadcast]
+      summary: Get broadcast progress
+      responses:
+        '200':
+          description: Broadcast progress
+
+  /v1/groups/{groupId}/messages/broadcast/{broadcastId}/pause:
+    post:
+      tags: [Broadcast]
+      summary: Pause broadcast
+      responses:
+        '200':
+          description: Paused
+
+  /v1/groups/{groupId}/messages/broadcast/{broadcastId}/resume:
+    post:
+      tags: [Broadcast]
+      summary: Resume broadcast
+      responses:
+        '200':
+          description: Resumed
+
+  /v1/groups/{groupId}/messages/broadcast/{broadcastId}/cancel:
+    post:
+      tags: [Broadcast]
+      summary: Cancel broadcast
+      responses:
+        '200':
+          description: Cancelled
+
+  /v1/groups/{groupId}/metrics:
+    get:
+      tags: [Metrics]
+      summary: Group metrics summary
+      responses:
+        '200':
+          description: Sent, delivered, failed, delivery rate
+
+  /v1/groups/{groupId}/metrics/daily:
+    get:
+      tags: [Metrics]
+      summary: Daily metrics
+      parameters:
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Daily breakdown
+
+  /v1/groups/{groupId}/metrics/instances:
+    get:
+      tags: [Metrics]
+      summary: Per-instance metrics
+      responses:
+        '200':
+          description: Metrics per instance
+
+  /v1/groups/{groupId}/blacklist:
+    get:
+      tags: [Blacklist]
+      summary: List blacklisted numbers
+      responses:
+        '200':
+          description: Blacklist entries
+    post:
+      tags: [Blacklist]
+      summary: Add numbers to blacklist
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [numbers]
+              properties:
+                numbers:
+                  type: array
+                  items:
+                    type: string
+                reason:
+                  type: string
+                  default: opt_out
+      responses:
+        '200':
+          description: Numbers added
+
+  /v1/groups/{groupId}/blacklist/{number}:
+    delete:
+      tags: [Blacklist]
+      summary: Remove from blacklist
+      responses:
+        '204':
+          description: Removed
+
+  /v1/groups/{groupId}/webhook:
+    put:
+      tags: [Webhooks]
+      summary: Configure webhook
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                events:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Webhook configured
+    get:
+      tags: [Webhooks]
+      summary: Get webhook config
+      responses:
+        '200':
+          description: Webhook details
+
+  /v1/groups/{groupId}/webhook/test:
+    post:
+      tags: [Webhooks]
+      summary: Send test webhook
+      responses:
+        '200':
+          description: Test sent
