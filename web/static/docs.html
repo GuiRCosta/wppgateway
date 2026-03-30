@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WPP Gateway - API Docs</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            oswald: ['Oswald', 'sans-serif'],
+            space: ['Space Grotesk', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #525252; border-radius: 3px; }
+    html { scroll-behavior: smooth; }
+    .method-get { color: #22c55e; }
+    .method-post { color: #3b82f6; }
+    .method-patch { color: #f59e0b; }
+    .method-put { color: #a855f7; }
+    .method-delete { color: #ef4444; }
+    .method-badge-get { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+    .method-badge-post { background: rgba(59,130,246,0.15); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3); }
+    .method-badge-patch { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+    .method-badge-put { background: rgba(168,85,247,0.15); color: #a855f7; border: 1px solid rgba(168,85,247,0.3); }
+    .method-badge-delete { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+    pre code { font-size: 0.8rem; line-height: 1.6; }
+    .nav-link.active { color: white; background: rgba(255,255,255,0.1); }
+    .copy-btn:active { transform: scale(0.9); }
+  </style>
+</head>
+<body class="min-h-screen font-space bg-neutral-950 text-neutral-300 antialiased" x-data="docsApp()" x-init="init()">
+
+  <div class="flex min-h-screen">
+    <!-- SIDEBAR -->
+    <aside class="fixed top-0 left-0 h-screen w-72 bg-neutral-900 border-r border-neutral-800 z-50 overflow-y-auto hidden lg:block">
+      <!-- Logo -->
+      <div class="px-6 py-5 border-b border-neutral-800">
+        <a href="/" class="flex items-center gap-3">
+          <div class="flex gap-1">
+            <div class="w-2 h-6 bg-white rounded-full"></div>
+            <div class="w-2 h-4 bg-white rounded-full"></div>
+            <div class="w-2 h-6 bg-white rounded-full"></div>
+          </div>
+          <span class="text-sm font-oswald font-medium tracking-wider uppercase text-white">WPP Gateway</span>
+        </a>
+        <p class="text-[0.6rem] uppercase tracking-widest text-neutral-500 mt-2">API Documentation v1.0</p>
+      </div>
+
+      <!-- Nav -->
+      <nav class="py-4 px-3 space-y-1">
+        <p class="px-3 mb-2 text-[0.6rem] font-semibold uppercase tracking-widest text-neutral-600">Inicio</p>
+        <a href="#overview" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Visao Geral</a>
+        <a href="#auth" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Autenticacao</a>
+        <a href="#architecture" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Arquitetura</a>
+
+        <p class="px-3 mt-6 mb-2 text-[0.6rem] font-semibold uppercase tracking-widest text-neutral-600">Endpoints</p>
+        <a href="#tenants" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Registro / Conta</a>
+        <a href="#groups" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Grupos</a>
+        <a href="#instances" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Instancias</a>
+        <a href="#messages" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Mensagens</a>
+        <a href="#broadcasts" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Broadcasts</a>
+        <a href="#metrics" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Metricas</a>
+        <a href="#blacklist" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Blacklist</a>
+        <a href="#webhooks" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Webhooks</a>
+
+        <p class="px-3 mt-6 mb-2 text-[0.6rem] font-semibold uppercase tracking-widest text-neutral-600">Tipos de Mensagem</p>
+        <a href="#msg-text" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Texto</a>
+        <a href="#msg-image" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Imagem</a>
+        <a href="#msg-video" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Video</a>
+        <a href="#msg-audio" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Audio</a>
+        <a href="#msg-document" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Documento</a>
+        <a href="#msg-location" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Localizacao</a>
+        <a href="#msg-contact" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Contato</a>
+        <a href="#msg-reaction" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Reacao</a>
+        <a href="#msg-poll" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Enquete</a>
+        <a href="#msg-buttons" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Botoes</a>
+        <a href="#msg-list" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Lista</a>
+
+        <p class="px-3 mt-6 mb-2 text-[0.6rem] font-semibold uppercase tracking-widest text-neutral-600">Modelos</p>
+        <a href="#models" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Schemas</a>
+        <a href="#statuses" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors">Status & Estrategias</a>
+      </nav>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="flex-1 lg:ml-72 min-w-0">
+      <!-- Top bar -->
+      <header class="sticky top-0 z-40 bg-neutral-950/95 backdrop-blur-sm border-b border-neutral-800 px-6 lg:px-10 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div class="lg:hidden flex gap-1">
+            <div class="w-2 h-5 bg-white rounded-full"></div>
+            <div class="w-2 h-3 bg-white rounded-full"></div>
+            <div class="w-2 h-5 bg-white rounded-full"></div>
+          </div>
+          <h1 class="text-lg font-oswald font-medium tracking-tight text-white">API Reference</h1>
+        </div>
+        <div class="flex items-center gap-4">
+          <code class="text-xs bg-neutral-800 px-3 py-1.5 rounded-lg border border-neutral-700 text-neutral-400">Base URL: http://localhost:8080</code>
+          <a href="/" class="px-4 py-1.5 rounded-full border border-neutral-700 text-xs font-semibold uppercase tracking-widest text-neutral-400 hover:text-white hover:border-neutral-500 transition-colors">Dashboard</a>
+        </div>
+      </header>
+
+      <div class="px-6 lg:px-10 py-8 max-w-4xl">
+
+        <!-- OVERVIEW -->
+        <section id="overview" class="mb-16">
+          <h2 class="text-3xl font-oswald font-medium tracking-tight text-white mb-4">Visao Geral</h2>
+          <p class="text-sm text-neutral-400 leading-relaxed mb-6">
+            WPP Gateway e uma API de WhatsApp com foco em disparo em massa e alta disponibilidade. O diferencial e o conceito de <strong class="text-white">Instance Group</strong> - uma camada de orquestracao que gerencia multiplos numeros de WhatsApp como um pool unificado, com estrategias configuraveis de rotacao e failover.
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 p-5">
+              <div class="text-xs font-semibold uppercase tracking-widest text-emerald-400 mb-2">Instance Groups</div>
+              <p class="text-xs text-neutral-500 leading-relaxed">Agrupe multiplos numeros com estrategias de failover, rotacao ou hibrido. O sistema escolhe automaticamente o melhor numero.</p>
+            </div>
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 p-5">
+              <div class="text-xs font-semibold uppercase tracking-widest text-blue-400 mb-2">Anti-Ban</div>
+              <p class="text-xs text-neutral-500 leading-relaxed">Budget diario/horario, delays humanizados, warmup progressivo, cooldown automatico e deteccao de degradacao.</p>
+            </div>
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 p-5">
+              <div class="text-xs font-semibold uppercase tracking-widest text-orange-400 mb-2">Broadcast</div>
+              <p class="text-xs text-neutral-500 leading-relaxed">Disparo em massa com spintax, variaveis, shuffle, agendamento e monitoramento em tempo real.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- AUTH -->
+        <section id="auth" class="mb-16">
+          <h2 class="text-3xl font-oswald font-medium tracking-tight text-white mb-4">Autenticacao</h2>
+          <p class="text-sm text-neutral-400 leading-relaxed mb-4">
+            Todas as requisicoes autenticadas devem incluir o header <code class="bg-neutral-800 px-2 py-0.5 rounded text-xs text-neutral-300">X-API-Key</code>.
+          </p>
+          <div class="bg-neutral-900 rounded-xl border border-neutral-800 p-5 mb-4">
+            <div class="text-xs font-semibold uppercase tracking-widest text-neutral-500 mb-3">Exemplo de Header</div>
+            <pre class="text-sm font-mono text-neutral-300 overflow-x-auto"><code>GET /v1/groups HTTP/1.1
+Host: localhost:8080
+X-API-Key: wpp_7d0e60e402b57c375571d4d390a0ddeef86c154103c76a26...
+Content-Type: application/json</code></pre>
+          </div>
+          <div class="bg-neutral-900 rounded-xl border border-neutral-800 p-5">
+            <div class="text-xs font-semibold uppercase tracking-widest text-neutral-500 mb-3">Formato de Resposta</div>
+            <pre class="text-sm font-mono text-neutral-300 overflow-x-auto"><code>{
+  "success": true,
+  "data": { ... },
+  "meta": {
+    "total": 10,
+    "limit": 20,
+    "offset": 0
+  }
+}
+
+// Erro
+{
+  "success": false,
+  "error": {
+    "code": "not_found",
+    "message": "Group not found"
+  }
+}</code></pre>
+          </div>
+        </section>
+
+        <!-- ARCHITECTURE -->
+        <section id="architecture" class="mb-16">
+          <h2 class="text-3xl font-oswald font-medium tracking-tight text-white mb-4">Arquitetura</h2>
+          <div class="bg-neutral-900 rounded-xl border border-neutral-800 p-6">
+            <pre class="text-xs font-mono text-neutral-400 overflow-x-auto leading-relaxed"><code>                    +-------------------------+
+                    |      API Gateway         |
+                    |   (Auth + Rate Limit)    |
+                    +-----------+-------------+
+                                |
+                    +-----------v-------------+
+                    |    Group Orchestrator    |
+                    |  (Strategy Engine)       |
+                    +-----------+-------------+
+                                |
+              +-----------------+-----------------+
+              |                 |                  |
+     +--------v-------+ +------v--------+ +------v--------+
+     |  Instance A     | |  Instance B    | |  Instance C    |
+     |  +55 11 9xxxx   | |  +55 11 8xxxx  | |  +55 21 9xxxx  |
+     |  status: active | |  status: rest  | |  status: warm  |
+     +--------+-------+ +------+--------+ +------+--------+
+              |                 |                  |
+              +-----------------+-----------------+
+                                |
+                    +-----------v-------------+
+                    |   WhatsApp Servers       |
+                    +-------------------------+</code></pre>
+          </div>
+          <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 p-4">
+              <h4 class="text-xs font-semibold uppercase tracking-widest text-white mb-2">Stack</h4>
+              <div class="space-y-1 text-xs text-neutral-500">
+                <div class="flex justify-between"><span>Linguagem</span><span class="text-neutral-300">Go 1.22+</span></div>
+                <div class="flex justify-between"><span>WhatsApp</span><span class="text-neutral-300">whatsmeow</span></div>
+                <div class="flex justify-between"><span>HTTP</span><span class="text-neutral-300">Fiber v2</span></div>
+                <div class="flex justify-between"><span>Banco</span><span class="text-neutral-300">PostgreSQL 16+</span></div>
+                <div class="flex justify-between"><span>Cache</span><span class="text-neutral-300">Redis 7+</span></div>
+                <div class="flex justify-between"><span>Monitoramento</span><span class="text-neutral-300">Prometheus + Grafana</span></div>
+              </div>
+            </div>
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 p-4">
+              <h4 class="text-xs font-semibold uppercase tracking-widest text-white mb-2">Componentes</h4>
+              <div class="space-y-1 text-xs text-neutral-500">
+                <div><span class="text-neutral-300">Group Orchestrator</span> - estrategias de routing</div>
+                <div><span class="text-neutral-300">Instance Manager</span> - conexao/QR/sessao</div>
+                <div><span class="text-neutral-300">Dispatcher</span> - fila de mensagens</div>
+                <div><span class="text-neutral-300">Health Monitor</span> - heartbeat e degradacao</div>
+                <div><span class="text-neutral-300">Webhook Emitter</span> - eventos para o cliente</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TENANTS -->
+        <section id="tenants" class="mb-16">
+          <h2 class="text-3xl font-oswald font-medium tracking-tight text-white mb-4">Registro / Conta</h2>
+
+          <div class="space-y-4">
+            <!-- POST /register -->
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-post px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">POST</span>
+                <code class="text-sm font-mono text-white">/register</code>
+                <span class="text-xs text-neutral-500 ml-auto">Sem autenticacao</span>
+              </div>
+              <div class="px-5 py-4">
+                <p class="text-xs text-neutral-400 mb-3">Cria um novo tenant e retorna a API key.</p>
+                <div class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-600 mb-2">Request Body</div>
+                <pre class="bg-neutral-950 rounded-lg p-4 overflow-x-auto mb-3"><code class="text-xs font-mono text-neutral-300">{
+  "name": "Minha Empresa"
+}</code></pre>
+                <div class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-600 mb-2">Response 201</div>
+                <pre class="bg-neutral-950 rounded-lg p-4 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{
+  "success": true,
+  "data": {
+    "api_key": "wpp_7d0e60e402b57c375571...",
+    "tenant": {
+      "id": "uuid",
+      "name": "Minha Empresa",
+      "plan": "basic",
+      "max_groups": 5,
+      "max_instances": 20,
+      "is_active": true
+    }
+  }
+}</code></pre>
+              </div>
+            </div>
+
+            <!-- GET /v1/account -->
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/account</code>
+              </div>
+              <div class="px-5 py-4">
+                <p class="text-xs text-neutral-400">Retorna os dados do tenant autenticado.</p>
+              </div>
+            </div>
+
+            <!-- PATCH /v1/account -->
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-patch px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">PATCH</span>
+                <code class="text-sm font-mono text-white">/v1/account</code>
+              </div>
+              <div class="px-5 py-4">
+                <p class="text-xs text-neutral-400">Atualiza dados da conta (nome).</p>
+              </div>
+            </div>
+
+            <!-- GET /v1/account/usage -->
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/account/usage</code>
+              </div>
+              <div class="px-5 py-4">
+                <p class="text-xs text-neutral-400">Retorna contagem de grupos e instancias.</p>
+              </div>
+            </div>
+
+            <!-- GET /v1/account/audit-log -->
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/account/audit-log</code>
+              </div>
+              <div class="px-5 py-4">
+                <p class="text-xs text-neutral-400 mb-2">Log de auditoria. Query params: <code class="bg-neutral-800 px-1.5 py-0.5 rounded text-[0.65rem]">action</code>, <code class="bg-neutral-800 px-1.5 py-0.5 rounded text-[0.65rem]">limit</code>, <code class="bg-neutral-800 px-1.5 py-0.5 rounded text-[0.65rem]">offset</code></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- GROUPS -->
+        <section id="groups" class="mb-16">
+          <h2 class="text-3xl font-oswald font-medium tracking-tight text-white mb-4">Grupos</h2>
+          <p class="text-sm text-neutral-400 mb-6">Instance Groups sao pools de numeros WhatsApp com estrategias de routing configuravel.</p>
+
+          <div class="space-y-4">
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-post px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">POST</span>
+                <code class="text-sm font-mono text-white">/v1/groups</code>
+              </div>
+              <div class="px-5 py-4">
+                <p class="text-xs text-neutral-400 mb-3">Cria um novo grupo.</p>
+                <pre class="bg-neutral-950 rounded-lg p-4 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{
+  "name": "campanha-marketing",
+  "strategy": "rotation",
+  "config": {
+    "daily_budget_per_instance": 200,
+    "hourly_budget_per_instance": 30,
+    "min_delay_ms": 2000,
+    "max_delay_ms": 7000
+  },
+  "webhook_url": "https://meusite.com/webhook",
+  "webhook_events": ["message.sent", "message.delivered", "instance.banned"]
+}</code></pre>
+              </div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/groups</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Lista todos os grupos do tenant.</p></div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Detalhes do grupo.</p></div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-patch px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">PATCH</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Atualiza configuracao/estrategia do grupo.</p></div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-delete px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">DELETE</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Deleta o grupo e desconecta todas as instancias.</p></div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/status</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Status consolidado com contagem de instancias por estado.</p></div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-post px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">POST</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/pause</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Pausa todos os disparos do grupo.</p></div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-post px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">POST</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/resume</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Retoma os disparos do grupo.</p></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- INSTANCES -->
+        <section id="instances" class="mb-16">
+          <h2 class="text-3xl font-oswald font-medium tracking-tight text-white mb-4">Instancias</h2>
+          <p class="text-sm text-neutral-400 mb-6">Uma instancia = uma sessao WhatsApp = um numero. Gerenciadas dentro de um grupo.</p>
+
+          <div class="space-y-4">
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-post px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">POST</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/instances</code>
+              </div>
+              <div class="px-5 py-4">
+                <p class="text-xs text-neutral-400 mb-3">Adiciona uma instancia ao grupo.</p>
+                <pre class="bg-neutral-950 rounded-lg p-4 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{
+  "display_name": "Celular 01",
+  "priority": 1,
+  "daily_budget": 200,
+  "hourly_budget": 30
+}</code></pre>
+              </div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/instances</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Lista instancias do grupo.</p></div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/instances/:instanceId</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Detalhes da instancia (status, budget, delivery rate).</p></div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/instances/:instanceId/qrcode</code>
+              </div>
+              <div class="px-5 py-4">
+                <p class="text-xs text-neutral-400 mb-3">Retorna QR code para conectar o WhatsApp.</p>
+                <div class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-600 mb-2">Response</div>
+                <pre class="bg-neutral-950 rounded-lg p-4 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{
+  "success": true,
+  "data": {
+    "qr_code": "2@ABC123...",
+    "qr_base64": "iVBORw0KGgo...",
+    "expires_in": 60
+  }
+}</code></pre>
+              </div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-post px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">POST</span>
+                <code class="text-sm font-mono text-white">/v1/instances/:instanceId/pair</code>
+              </div>
+              <div class="px-5 py-4">
+                <p class="text-xs text-neutral-400 mb-3">Conecta via pairing code (alternativa ao QR).</p>
+                <pre class="bg-neutral-950 rounded-lg p-4 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{ "phone": "5511999999999" }</code></pre>
+              </div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-post px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">POST</span>
+                <code class="text-sm font-mono text-white">/v1/instances/:instanceId/connect</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Reconecta sessao existente.</p></div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-post px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">POST</span>
+                <code class="text-sm font-mono text-white">/v1/instances/:instanceId/disconnect</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Desconecta (mantem credenciais salvas).</p></div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-post px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">POST</span>
+                <code class="text-sm font-mono text-white">/v1/instances/:instanceId/restart</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Desconecta e reconecta a instancia.</p></div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/instances/:instanceId/status</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Status de conexao (WebSocket state).</p></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MESSAGES -->
+        <section id="messages" class="mb-16">
+          <h2 class="text-3xl font-oswald font-medium tracking-tight text-white mb-4">Mensagens</h2>
+          <p class="text-sm text-neutral-400 mb-6">Envie mensagens via grupo (recomendado) - o orchestrator escolhe a melhor instancia automaticamente.</p>
+
+          <div class="space-y-4">
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-post px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">POST</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/messages/send</code>
+              </div>
+              <div class="px-5 py-4">
+                <p class="text-xs text-neutral-400 mb-3">Envia uma mensagem via grupo.</p>
+                <pre class="bg-neutral-950 rounded-lg p-4 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{
+  "to": "5511999999999",
+  "type": "text",
+  "content": {
+    "body": "Ola, tudo bem?"
+  }
+}</code></pre>
+              </div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/messages</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Lista mensagens. Query: <code class="bg-neutral-800 px-1.5 py-0.5 rounded text-[0.65rem]">status</code>, <code class="bg-neutral-800 px-1.5 py-0.5 rounded text-[0.65rem]">limit</code>, <code class="bg-neutral-800 px-1.5 py-0.5 rounded text-[0.65rem]">offset</code></p></div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/messages/:messageId/status</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Status de entrega da mensagem (queued, sent, delivered, read, failed).</p></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MESSAGE TYPES -->
+        <section id="msg-text" class="mb-10">
+          <h3 class="text-xl font-oswald font-medium tracking-tight text-white mb-3">Texto</h3>
+          <pre class="bg-neutral-900 rounded-xl border border-neutral-800 p-5 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{ "to": "5511999999999", "type": "text", "content": { "body": "Ola!", "preview_url": true } }</code></pre>
+        </section>
+
+        <section id="msg-image" class="mb-10">
+          <h3 class="text-xl font-oswald font-medium tracking-tight text-white mb-3">Imagem</h3>
+          <pre class="bg-neutral-900 rounded-xl border border-neutral-800 p-5 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{
+  "to": "5511999999999", "type": "image",
+  "content": { "url": "https://exemplo.com/foto.jpg", "caption": "Veja!", "mime_type": "image/jpeg" }
+}</code></pre>
+        </section>
+
+        <section id="msg-video" class="mb-10">
+          <h3 class="text-xl font-oswald font-medium tracking-tight text-white mb-3">Video</h3>
+          <pre class="bg-neutral-900 rounded-xl border border-neutral-800 p-5 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{
+  "to": "5511999999999", "type": "video",
+  "content": { "url": "https://exemplo.com/video.mp4", "caption": "Assista!", "mime_type": "video/mp4" }
+}</code></pre>
+        </section>
+
+        <section id="msg-audio" class="mb-10">
+          <h3 class="text-xl font-oswald font-medium tracking-tight text-white mb-3">Audio</h3>
+          <pre class="bg-neutral-900 rounded-xl border border-neutral-800 p-5 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{
+  "to": "5511999999999", "type": "audio",
+  "content": { "url": "https://exemplo.com/audio.ogg", "mime_type": "audio/ogg; codecs=opus", "ptt": true }
+}</code></pre>
+          <p class="text-xs text-neutral-500 mt-2"><code class="text-neutral-400">ptt: true</code> = mensagem de voz. <code class="text-neutral-400">ptt: false</code> = arquivo de audio.</p>
+        </section>
+
+        <section id="msg-document" class="mb-10">
+          <h3 class="text-xl font-oswald font-medium tracking-tight text-white mb-3">Documento</h3>
+          <pre class="bg-neutral-900 rounded-xl border border-neutral-800 p-5 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{
+  "to": "5511999999999", "type": "document",
+  "content": { "url": "https://exemplo.com/doc.pdf", "mime_type": "application/pdf", "filename": "Contrato.pdf" }
+}</code></pre>
+        </section>
+
+        <section id="msg-location" class="mb-10">
+          <h3 class="text-xl font-oswald font-medium tracking-tight text-white mb-3">Localizacao</h3>
+          <pre class="bg-neutral-900 rounded-xl border border-neutral-800 p-5 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{
+  "to": "5511999999999", "type": "location",
+  "content": { "latitude": -23.5505, "longitude": -46.6333, "name": "Escritorio SP", "address": "Av. Paulista, 1000" }
+}</code></pre>
+        </section>
+
+        <section id="msg-contact" class="mb-10">
+          <h3 class="text-xl font-oswald font-medium tracking-tight text-white mb-3">Contato (vCard)</h3>
+          <pre class="bg-neutral-900 rounded-xl border border-neutral-800 p-5 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{
+  "to": "5511999999999", "type": "contact",
+  "content": {
+    "contacts": [{
+      "name": { "formatted_name": "Joao Silva", "first_name": "Joao" },
+      "phones": [{ "phone": "+5511999999999", "type": "CELL" }]
+    }]
+  }
+}</code></pre>
+        </section>
+
+        <section id="msg-reaction" class="mb-10">
+          <h3 class="text-xl font-oswald font-medium tracking-tight text-white mb-3">Reacao</h3>
+          <pre class="bg-neutral-900 rounded-xl border border-neutral-800 p-5 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{ "to": "5511999999999", "type": "reaction", "content": { "message_id": "ABCDEF123", "emoji": "👍" } }</code></pre>
+          <p class="text-xs text-neutral-500 mt-2">Envie <code class="text-neutral-400">emoji: ""</code> para remover a reacao.</p>
+        </section>
+
+        <section id="msg-poll" class="mb-10">
+          <h3 class="text-xl font-oswald font-medium tracking-tight text-white mb-3">Enquete</h3>
+          <pre class="bg-neutral-900 rounded-xl border border-neutral-800 p-5 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{
+  "to": "5511999999999", "type": "poll",
+  "content": { "title": "Qual horario?", "options": ["Manha", "Tarde", "Noite"], "max_selections": 1 }
+}</code></pre>
+        </section>
+
+        <section id="msg-buttons" class="mb-10">
+          <h3 class="text-xl font-oswald font-medium tracking-tight text-white mb-3">Botoes (ate 3)</h3>
+          <pre class="bg-neutral-900 rounded-xl border border-neutral-800 p-5 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{
+  "to": "5511999999999", "type": "button",
+  "content": {
+    "body": "Escolha uma opcao:",
+    "footer": "Responda clicando",
+    "buttons": [
+      { "id": "btn_sim", "text": "Sim" },
+      { "id": "btn_nao", "text": "Nao" },
+      { "id": "btn_info", "text": "Mais info" }
+    ]
+  }
+}</code></pre>
+        </section>
+
+        <section id="msg-list" class="mb-16">
+          <h3 class="text-xl font-oswald font-medium tracking-tight text-white mb-3">Lista (ate 10 itens)</h3>
+          <pre class="bg-neutral-900 rounded-xl border border-neutral-800 p-5 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{
+  "to": "5511999999999", "type": "list",
+  "content": {
+    "body": "Nosso cardapio:", "button_text": "Ver opcoes",
+    "sections": [{
+      "title": "Pizzas",
+      "items": [
+        { "id": "pizza_1", "title": "Margherita", "description": "R$ 39,90" },
+        { "id": "pizza_2", "title": "Pepperoni", "description": "R$ 44,90" }
+      ]
+    }]
+  }
+}</code></pre>
+        </section>
+
+        <!-- BROADCASTS -->
+        <section id="broadcasts" class="mb-16">
+          <h2 class="text-3xl font-oswald font-medium tracking-tight text-white mb-4">Broadcasts</h2>
+          <div class="space-y-4">
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-post px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">POST</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/messages/broadcast</code>
+              </div>
+              <div class="px-5 py-4">
+                <p class="text-xs text-neutral-400 mb-3">Cria um disparo em massa.</p>
+                <pre class="bg-neutral-950 rounded-lg p-4 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{
+  "recipients": ["5511999999999", "5511888888888"],
+  "type": "text",
+  "content": { "body": "Ola {nome}!" },
+  "variables": { "5511999999999": { "nome": "Joao" } },
+  "options": { "shuffle_recipients": true, "spintax": true }
+}</code></pre>
+              </div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/messages/broadcast</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Lista broadcasts do grupo.</p></div>
+            </div>
+
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/messages/broadcast/:broadcastId</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Progresso do broadcast (total, sent, delivered, failed).</p></div>
+            </div>
+
+            <div class="flex gap-4 flex-wrap">
+              <div class="flex-1 min-w-[200px] bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+                <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                  <span class="method-badge-post px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">POST</span>
+                  <code class="text-xs font-mono text-white">.../pause</code>
+                </div>
+                <div class="px-5 py-3"><p class="text-xs text-neutral-400">Pausa o broadcast.</p></div>
+              </div>
+              <div class="flex-1 min-w-[200px] bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+                <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                  <span class="method-badge-post px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">POST</span>
+                  <code class="text-xs font-mono text-white">.../resume</code>
+                </div>
+                <div class="px-5 py-3"><p class="text-xs text-neutral-400">Retoma o broadcast.</p></div>
+              </div>
+              <div class="flex-1 min-w-[200px] bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+                <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                  <span class="method-badge-post px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">POST</span>
+                  <code class="text-xs font-mono text-white">.../cancel</code>
+                </div>
+                <div class="px-5 py-3"><p class="text-xs text-neutral-400">Cancela o broadcast.</p></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- METRICS -->
+        <section id="metrics" class="mb-16">
+          <h2 class="text-3xl font-oswald font-medium tracking-tight text-white mb-4">Metricas</h2>
+          <div class="space-y-4">
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/metrics</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Resumo: enviadas, entregues, falharam, taxa de entrega.</p></div>
+            </div>
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/metrics/daily</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Metricas diarias. Query: <code class="bg-neutral-800 px-1.5 py-0.5 rounded text-[0.65rem]">from</code>, <code class="bg-neutral-800 px-1.5 py-0.5 rounded text-[0.65rem]">to</code> (YYYY-MM-DD)</p></div>
+            </div>
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/metrics/instances</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Metricas por instancia do grupo.</p></div>
+            </div>
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/metrics</code>
+                <span class="text-xs text-neutral-500 ml-auto">Sem autenticacao</span>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Prometheus metrics endpoint (formato texto).</p></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- BLACKLIST -->
+        <section id="blacklist" class="mb-16">
+          <h2 class="text-3xl font-oswald font-medium tracking-tight text-white mb-4">Blacklist</h2>
+          <div class="space-y-4">
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/blacklist</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Lista numeros bloqueados.</p></div>
+            </div>
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-post px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">POST</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/blacklist</code>
+              </div>
+              <div class="px-5 py-4">
+                <pre class="bg-neutral-950 rounded-lg p-4 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{ "numbers": ["5511999999999", "5511888888888"], "reason": "opt_out" }</code></pre>
+              </div>
+            </div>
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-delete px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">DELETE</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/blacklist/:number</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Remove numero da blacklist.</p></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- WEBHOOKS -->
+        <section id="webhooks" class="mb-16">
+          <h2 class="text-3xl font-oswald font-medium tracking-tight text-white mb-4">Webhooks</h2>
+          <div class="space-y-4">
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-put px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">PUT</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/webhook</code>
+              </div>
+              <div class="px-5 py-4">
+                <pre class="bg-neutral-950 rounded-lg p-4 overflow-x-auto"><code class="text-xs font-mono text-neutral-300">{
+  "url": "https://meusite.com/webhook",
+  "events": ["message.sent", "message.delivered", "message.failed", "instance.status_changed"]
+}</code></pre>
+              </div>
+            </div>
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-get px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">GET</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/webhook</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Configuracao atual do webhook.</p></div>
+            </div>
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 overflow-hidden">
+              <div class="flex items-center gap-3 px-5 py-3 border-b border-neutral-800">
+                <span class="method-badge-post px-2 py-0.5 rounded text-[0.65rem] font-mono font-bold uppercase">POST</span>
+                <code class="text-sm font-mono text-white">/v1/groups/:groupId/webhook/test</code>
+              </div>
+              <div class="px-5 py-3"><p class="text-xs text-neutral-400">Envia um evento de teste para o webhook configurado.</p></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- MODELS -->
+        <section id="models" class="mb-16">
+          <h2 class="text-3xl font-oswald font-medium tracking-tight text-white mb-4">Schemas</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 p-5">
+              <h4 class="text-xs font-semibold uppercase tracking-widest text-white mb-3">Tenant</h4>
+              <div class="space-y-1.5 text-xs font-mono text-neutral-400">
+                <div>id <span class="text-neutral-600">uuid</span></div>
+                <div>name <span class="text-neutral-600">string</span></div>
+                <div>plan <span class="text-neutral-600">string</span></div>
+                <div>max_groups <span class="text-neutral-600">int</span></div>
+                <div>max_instances <span class="text-neutral-600">int</span></div>
+                <div>is_active <span class="text-neutral-600">boolean</span></div>
+                <div>created_at <span class="text-neutral-600">datetime</span></div>
+              </div>
+            </div>
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 p-5">
+              <h4 class="text-xs font-semibold uppercase tracking-widest text-white mb-3">Group</h4>
+              <div class="space-y-1.5 text-xs font-mono text-neutral-400">
+                <div>id <span class="text-neutral-600">uuid</span></div>
+                <div>tenant_id <span class="text-neutral-600">uuid</span></div>
+                <div>name <span class="text-neutral-600">string</span></div>
+                <div>strategy <span class="text-neutral-600">failover | rotation | hybrid</span></div>
+                <div>config <span class="text-neutral-600">object</span></div>
+                <div>webhook_url <span class="text-neutral-600">string</span></div>
+                <div>webhook_events <span class="text-neutral-600">string[]</span></div>
+                <div>is_active <span class="text-neutral-600">boolean</span></div>
+              </div>
+            </div>
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 p-5">
+              <h4 class="text-xs font-semibold uppercase tracking-widest text-white mb-3">Instance</h4>
+              <div class="space-y-1.5 text-xs font-mono text-neutral-400">
+                <div>id <span class="text-neutral-600">uuid</span></div>
+                <div>group_id <span class="text-neutral-600">uuid</span></div>
+                <div>phone_number <span class="text-neutral-600">string</span></div>
+                <div>display_name <span class="text-neutral-600">string</span></div>
+                <div>status <span class="text-neutral-600">enum (ver abaixo)</span></div>
+                <div>priority <span class="text-neutral-600">int</span></div>
+                <div>daily_budget <span class="text-neutral-600">int</span></div>
+                <div>hourly_budget <span class="text-neutral-600">int</span></div>
+                <div>messages_today <span class="text-neutral-600">int</span></div>
+                <div>delivery_rate <span class="text-neutral-600">float</span></div>
+              </div>
+            </div>
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 p-5">
+              <h4 class="text-xs font-semibold uppercase tracking-widest text-white mb-3">Broadcast</h4>
+              <div class="space-y-1.5 text-xs font-mono text-neutral-400">
+                <div>id <span class="text-neutral-600">uuid</span></div>
+                <div>group_id <span class="text-neutral-600">uuid</span></div>
+                <div>status <span class="text-neutral-600">enum (ver abaixo)</span></div>
+                <div>total <span class="text-neutral-600">int</span></div>
+                <div>sent <span class="text-neutral-600">int</span></div>
+                <div>delivered <span class="text-neutral-600">int</span></div>
+                <div>failed <span class="text-neutral-600">int</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- STATUSES -->
+        <section id="statuses" class="mb-16">
+          <h2 class="text-3xl font-oswald font-medium tracking-tight text-white mb-4">Status & Estrategias</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 p-5">
+              <h4 class="text-xs font-semibold uppercase tracking-widest text-white mb-3">Instance Status</h4>
+              <div class="space-y-2 text-xs">
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-neutral-500"></div><span class="text-neutral-300">disconnected</span><span class="text-neutral-600">- Desconectado</span></div>
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-yellow-500"></div><span class="text-neutral-300">connecting</span><span class="text-neutral-600">- Conectando</span></div>
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-emerald-500"></div><span class="text-neutral-300">available</span><span class="text-neutral-600">- Pronto para envio</span></div>
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-blue-500"></div><span class="text-neutral-300">resting</span><span class="text-neutral-600">- Cooldown ativo</span></div>
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-orange-500"></div><span class="text-neutral-300">warming</span><span class="text-neutral-600">- Aquecimento progressivo</span></div>
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-red-500"></div><span class="text-neutral-300">suspect</span><span class="text-neutral-600">- Sinais de degradacao</span></div>
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-red-700"></div><span class="text-neutral-300">banned</span><span class="text-neutral-600">- Numero banido</span></div>
+              </div>
+            </div>
+            <div class="bg-neutral-900 rounded-xl border border-neutral-800 p-5">
+              <h4 class="text-xs font-semibold uppercase tracking-widest text-white mb-3">Estrategias de Grupo</h4>
+              <div class="space-y-3 text-xs">
+                <div>
+                  <span class="text-blue-400 font-semibold">failover</span>
+                  <p class="text-neutral-500 mt-1">Usa instancia primaria. Se falhar, promove a proxima por prioridade. Ideal para atendimento.</p>
+                </div>
+                <div>
+                  <span class="text-purple-400 font-semibold">rotation</span>
+                  <p class="text-neutral-500 mt-1">Distribui mensagens entre instancias respeitando budget. Ideal para marketing.</p>
+                </div>
+                <div>
+                  <span class="text-orange-400 font-semibold">hybrid</span>
+                  <p class="text-neutral-500 mt-1">Rotacao com failover automatico. Combina alta vazao com resiliencia.</p>
+                </div>
+              </div>
+              <h4 class="text-xs font-semibold uppercase tracking-widest text-white mt-6 mb-3">Broadcast Status</h4>
+              <div class="space-y-1.5 text-xs text-neutral-400">
+                <div><span class="text-neutral-300">pending</span> - Aguardando</div>
+                <div><span class="text-blue-400">processing</span> - Em andamento</div>
+                <div><span class="text-yellow-400">paused</span> - Pausado</div>
+                <div><span class="text-emerald-400">completed</span> - Finalizado</div>
+                <div><span class="text-neutral-500">cancelled</span> - Cancelado</div>
+                <div><span class="text-red-400">failed</span> - Falhou</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="border-t border-neutral-800 pt-8 pb-12 text-center">
+          <div class="flex items-center justify-center gap-2 mb-3">
+            <div class="flex gap-1">
+              <div class="w-1.5 h-4 bg-neutral-700 rounded-full"></div>
+              <div class="w-1.5 h-3 bg-neutral-700 rounded-full"></div>
+              <div class="w-1.5 h-4 bg-neutral-700 rounded-full"></div>
+            </div>
+            <span class="text-xs font-oswald tracking-wider uppercase text-neutral-600">WPP Gateway</span>
+          </div>
+          <p class="text-xs text-neutral-600">API Documentation v1.0</p>
+        </footer>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function docsApp() {
+      return {
+        init() {
+          this.highlightNav()
+          window.addEventListener('scroll', () => this.highlightNav())
+        },
+        highlightNav() {
+          const sections = document.querySelectorAll('section[id]')
+          const links = document.querySelectorAll('.nav-link')
+          let current = ''
+          sections.forEach(section => {
+            const top = section.offsetTop - 120
+            if (window.scrollY >= top) {
+              current = section.getAttribute('id')
+            }
+          })
+          links.forEach(link => {
+            link.classList.remove('active')
+            if (link.getAttribute('href') === '#' + current) {
+              link.classList.add('active')
+            }
+          })
+        },
+      }
+    }
+  </script>
+</body>
+</html>
