@@ -169,6 +169,16 @@
           <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 001.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 010 3.46"/></svg>
           <span x-show="!$store.ui.sidebarCollapsed">Broadcasts</span>
         </a>
+
+        <p x-show="!$store.ui.sidebarCollapsed" class="px-3 mt-6 mb-2 text-[0.6rem] font-semibold uppercase tracking-widest text-neutral-500">Recursos</p>
+        <a @click.prevent="$store.router.navigate('logs')" href="#/logs" :class="$store.router.page === 'logs' ? 'bg-white/10 text-white' : 'text-neutral-400 hover:text-white hover:bg-white/5'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors cursor-pointer">
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z"/></svg>
+          <span x-show="!$store.ui.sidebarCollapsed">Logs</span>
+        </a>
+        <a href="/docs" target="_blank" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer">
+          <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+          <span x-show="!$store.ui.sidebarCollapsed">API Docs</span>
+        </a>
       </nav>
 
       <!-- Bottom: Account -->
@@ -412,26 +422,66 @@
             <!-- Add Instance Modal -->
             <div x-show="showAddInstance" x-transition.opacity class="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="showAddInstance = false">
               <div class="bg-[#E6E6E6] rounded-2xl p-6 shadow-2xl max-w-lg w-full mx-4 animate-scale-in border border-neutral-300" @click.stop>
-                <h3 class="text-lg font-oswald font-medium tracking-tight mb-6">Nova Instancia</h3>
+                <h3 class="text-lg font-oswald font-medium tracking-tight mb-1">Nova Instancia</h3>
+                <p class="text-xs text-neutral-500 mb-5">
+                  <span x-show="group?.strategy === 'failover'">Estrategia <strong class="text-blue-600">Failover</strong> — a prioridade define qual instancia e a principal. Se falhar, a proxima assume.</span>
+                  <span x-show="group?.strategy === 'rotation'">Estrategia <strong class="text-purple-600">Rotacao</strong> — as mensagens sao distribuidas entre instancias respeitando o budget de cada uma.</span>
+                  <span x-show="group?.strategy === 'hybrid'">Estrategia <strong class="text-orange-600">Hibrido</strong> — rotacao com failover automatico. Defina prioridade e budget.</span>
+                </p>
                 <form @submit.prevent="addInstance()" class="space-y-4">
                   <div>
                     <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Nome</label>
                     <input type="text" x-model="instForm.display_name" placeholder="Celular 01" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
                   </div>
-                  <div class="grid grid-cols-3 gap-4">
+
+                  <!-- Failover: prioridade e destaque -->
+                  <template x-if="group?.strategy === 'failover'">
                     <div>
-                      <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Prioridade</label>
-                      <input type="number" x-model.number="instForm.priority" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                      <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Prioridade <span class="text-blue-500">(principal = 1)</span></label>
+                      <input type="number" x-model.number="instForm.priority" min="1" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                      <p class="text-[0.65rem] text-neutral-400 mt-1.5">Prioridade 1 = instancia principal. 2, 3... = backups em ordem.</p>
                     </div>
-                    <div>
-                      <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Budget/dia</label>
-                      <input type="number" x-model.number="instForm.daily_budget" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                  </template>
+
+                  <!-- Rotation: budget e destaque -->
+                  <template x-if="group?.strategy === 'rotation'">
+                    <div class="space-y-4">
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Budget/dia <span class="text-purple-500">*</span></label>
+                          <input type="number" x-model.number="instForm.daily_budget" min="1" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                          <p class="text-[0.65rem] text-neutral-400 mt-1.5">Max mensagens por dia nesta instancia.</p>
+                        </div>
+                        <div>
+                          <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Budget/hora <span class="text-purple-500">*</span></label>
+                          <input type="number" x-model.number="instForm.hourly_budget" min="1" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                          <p class="text-[0.65rem] text-neutral-400 mt-1.5">Max mensagens por hora nesta instancia.</p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Budget/hora</label>
-                      <input type="number" x-model.number="instForm.hourly_budget" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                  </template>
+
+                  <!-- Hybrid: tudo -->
+                  <template x-if="group?.strategy === 'hybrid'">
+                    <div class="space-y-4">
+                      <div>
+                        <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Prioridade <span class="text-orange-500">(fallback order)</span></label>
+                        <input type="number" x-model.number="instForm.priority" min="1" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                        <p class="text-[0.65rem] text-neutral-400 mt-1.5">Ordem de failover quando uma instancia falha.</p>
+                      </div>
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Budget/dia</label>
+                          <input type="number" x-model.number="instForm.daily_budget" min="1" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                        </div>
+                        <div>
+                          <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Budget/hora</label>
+                          <input type="number" x-model.number="instForm.hourly_budget" min="1" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  </template>
+
                   <div class="flex gap-3 justify-end pt-2">
                     <button type="button" @click="showAddInstance = false" class="px-5 py-2 rounded-full border border-neutral-400 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors">Cancelar</button>
                     <button type="submit" class="px-5 py-2 rounded-full bg-neutral-950 text-white text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800 transition-colors">Criar</button>
@@ -651,6 +701,119 @@
           </div>
         </div>
 
+        <!-- LOGS PAGE -->
+        <div x-show="$store.router.page === 'logs'" x-data="logsPage()" x-effect="if($store.router.page === 'logs' && $store.auth.authenticated) load()">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <h2 class="text-lg font-oswald font-semibold tracking-wide uppercase">Logs do Sistema</h2>
+            <div class="flex items-center gap-3">
+              <select x-model="levelFilter" @change="load(true)" class="px-3 py-2 rounded-xl bg-neutral-200/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500">
+                <option value="">Todos os niveis</option>
+                <option value="debug">Debug</option>
+                <option value="info">Info</option>
+                <option value="warn">Warn</option>
+                <option value="error">Error</option>
+                <option value="fatal">Fatal</option>
+              </select>
+              <select x-model="limitFilter" @change="load(true)" class="px-3 py-2 rounded-xl bg-neutral-200/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500">
+                <option value="50">50 linhas</option>
+                <option value="100">100 linhas</option>
+                <option value="200">200 linhas</option>
+                <option value="500">500 linhas</option>
+              </select>
+              <label class="flex items-center gap-2 text-sm text-neutral-600 cursor-pointer select-none">
+                <input type="checkbox" x-model="autoRefresh" @change="toggleAutoRefresh()" class="rounded border-neutral-400">
+                Auto-refresh
+              </label>
+              <button @click="load(true)" class="flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white rounded-xl text-sm hover:bg-neutral-800 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M2.985 14.652"/></svg>
+                Atualizar
+              </button>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
+            <div class="bg-white rounded-xl border border-neutral-200 px-4 py-3">
+              <p class="text-[0.6rem] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Total</p>
+              <p class="text-xl font-oswald font-semibold" x-text="logs.length"></p>
+            </div>
+            <div class="bg-white rounded-xl border border-neutral-200 px-4 py-3">
+              <p class="text-[0.6rem] font-semibold uppercase tracking-widest text-blue-500 mb-1">Info</p>
+              <p class="text-xl font-oswald font-semibold text-blue-600" x-text="logs.filter(l => l.level === 'info').length"></p>
+            </div>
+            <div class="bg-white rounded-xl border border-neutral-200 px-4 py-3">
+              <p class="text-[0.6rem] font-semibold uppercase tracking-widest text-amber-500 mb-1">Warn</p>
+              <p class="text-xl font-oswald font-semibold text-amber-600" x-text="logs.filter(l => l.level === 'warn' || l.level === 'warning').length"></p>
+            </div>
+            <div class="bg-white rounded-xl border border-neutral-200 px-4 py-3">
+              <p class="text-[0.6rem] font-semibold uppercase tracking-widest text-red-500 mb-1">Error</p>
+              <p class="text-xl font-oswald font-semibold text-red-600" x-text="logs.filter(l => l.level === 'error').length"></p>
+            </div>
+            <div class="bg-white rounded-xl border border-neutral-200 px-4 py-3">
+              <p class="text-[0.6rem] font-semibold uppercase tracking-widest text-red-700 mb-1">Fatal</p>
+              <p class="text-xl font-oswald font-semibold text-red-800" x-text="logs.filter(l => l.level === 'fatal').length"></p>
+            </div>
+          </div>
+
+          <!-- Loading -->
+          <div x-show="loading" class="text-center py-12">
+            <div class="inline-block w-6 h-6 border-2 border-neutral-300 border-t-neutral-900 rounded-full animate-spin"></div>
+          </div>
+
+          <!-- Search -->
+          <div x-show="!loading && logs.length > 0" class="mb-4">
+            <input type="text" x-model="search" placeholder="Buscar nos logs..." class="w-full px-4 py-2.5 rounded-xl bg-neutral-200/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500 placeholder:text-neutral-400">
+          </div>
+
+          <!-- Log entries -->
+          <div x-show="!loading && filteredLogs().length > 0" class="bg-neutral-950 rounded-2xl border border-neutral-800 overflow-hidden">
+            <div class="overflow-x-auto max-h-[70vh] overflow-y-auto font-mono text-xs">
+              <template x-for="(log, idx) in filteredLogs()" :key="idx">
+                <div class="flex border-b border-neutral-800/50 hover:bg-neutral-900 transition-colors cursor-pointer" @click="log._expanded = !log._expanded">
+                  <div class="shrink-0 w-[180px] px-3 py-2 text-neutral-500" x-text="formatLogTime(log.timestamp)"></div>
+                  <div class="shrink-0 w-[60px] px-2 py-2">
+                    <span class="text-[0.6rem] font-bold uppercase px-1.5 py-0.5 rounded"
+                      :class="{
+                        'bg-blue-500/20 text-blue-400': log.level === 'info',
+                        'bg-green-500/20 text-green-400': log.level === 'debug',
+                        'bg-amber-500/20 text-amber-400': log.level === 'warn' || log.level === 'warning',
+                        'bg-red-500/20 text-red-400': log.level === 'error',
+                        'bg-red-700/30 text-red-300': log.level === 'fatal',
+                      }"
+                      x-text="log.level?.toUpperCase()"></span>
+                  </div>
+                  <div class="flex-1 px-2 py-2 text-neutral-200 break-all" x-text="log.message"></div>
+                  <div class="shrink-0 w-[200px] px-2 py-2 text-neutral-600 truncate" x-text="log.caller || ''"></div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- Detail panel for expanded log -->
+          <template x-for="(log, idx) in filteredLogs()" :key="'detail-' + idx">
+            <div x-show="log._expanded" class="bg-neutral-900 rounded-xl border border-neutral-700 p-4 mt-1 mb-2 font-mono text-xs">
+              <template x-if="log.fields && Object.keys(log.fields).length > 0">
+                <div class="space-y-1">
+                  <template x-for="key in Object.keys(log.fields)" :key="key">
+                    <div class="flex gap-2">
+                      <span class="text-cyan-400 shrink-0" x-text="key + ':'"></span>
+                      <span class="text-neutral-300 break-all" x-text="typeof log.fields[key] === 'object' ? JSON.stringify(log.fields[key]) : String(log.fields[key])"></span>
+                    </div>
+                  </template>
+                </div>
+              </template>
+              <p x-show="!log.fields || Object.keys(log.fields).length === 0" class="text-neutral-500">Sem campos adicionais</p>
+            </div>
+          </template>
+
+          <!-- Empty state -->
+          <div x-show="!loading && logs.length === 0" class="text-center py-16">
+            <svg class="w-12 h-12 mx-auto text-neutral-300 mb-4" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z"/></svg>
+            <p class="text-sm font-semibold uppercase tracking-widest text-neutral-500 mb-1">Nenhum log encontrado</p>
+            <p class="text-xs text-neutral-400">Os logs aparecerao conforme a aplicacao processa requests</p>
+          </div>
+        </div>
+
       </div>
     </main>
   </div>
@@ -738,8 +901,8 @@
         editId: null,
         form: { name: '', strategy: 'failover', webhook_url: '' },
 
-        async load() {
-          if (this._loaded) return
+        async load(force) {
+          if (this._loaded && !force) return
           this._loaded = true
           this.loading = true
           try {
@@ -774,7 +937,7 @@
               Alpine.store('toast').show('success', 'Grupo criado')
             }
             this.showCreate = false
-            await this.load()
+            await this.load(true)
           } catch (err) {
             Alpine.store('toast').show('error', err.message)
           } finally {
@@ -815,7 +978,13 @@
         },
 
         resetInstanceForm() {
-          this.instForm = { display_name: '', priority: 1, daily_budget: 200, hourly_budget: 30 }
+          const s = this.group?.strategy
+          this.instForm = {
+            display_name: '',
+            priority: s === 'rotation' ? 0 : (this.instances.length + 1),
+            daily_budget: s === 'failover' ? 1000 : 200,
+            hourly_budget: s === 'failover' ? 200 : 30,
+          }
         },
 
         async addInstance() {
@@ -1032,6 +1201,60 @@
             Alpine.store('toast').show('error', err.message)
           } finally {
             this.loading = false
+          }
+        },
+      }
+    }
+
+    function logsPage() {
+      return {
+        logs: [],
+        loading: true,
+        levelFilter: '',
+        limitFilter: '100',
+        search: '',
+        autoRefresh: false,
+        _refreshInterval: null,
+        _loaded: false,
+
+        async load(force) {
+          if (this._loaded && !force) return
+          this._loaded = true
+          this.loading = true
+          try {
+            const params = { limit: this.limitFilter }
+            if (this.levelFilter) params.level = this.levelFilter
+            const res = await Api.getLogs(params)
+            this.logs = (res?.data || []).map(l => ({ ...l, _expanded: false }))
+          } catch (err) {
+            Alpine.store('toast').show('error', err.message)
+          } finally {
+            this.loading = false
+          }
+        },
+
+        filteredLogs() {
+          if (!this.search) return this.logs
+          const q = this.search.toLowerCase()
+          return this.logs.filter(l =>
+            (l.message || '').toLowerCase().includes(q) ||
+            (l.caller || '').toLowerCase().includes(q) ||
+            JSON.stringify(l.fields || {}).toLowerCase().includes(q)
+          )
+        },
+
+        formatLogTime(ts) {
+          if (!ts) return ''
+          const d = new Date(ts)
+          return d.toLocaleString('pt-BR', { hour12: false })
+        },
+
+        toggleAutoRefresh() {
+          if (this.autoRefresh) {
+            this._refreshInterval = setInterval(() => this.load(true), 5000)
+          } else if (this._refreshInterval) {
+            clearInterval(this._refreshInterval)
+            this._refreshInterval = null
           }
         },
       }

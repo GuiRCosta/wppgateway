@@ -79,6 +79,12 @@ const Api = {
     return this.get(`/v1/account/audit-log?${qs}`)
   },
 
+  // Logs
+  getLogs(params) {
+    const qs = new URLSearchParams(params).toString()
+    return this.get(`/v1/logs?${qs}`)
+  },
+
   // Groups
   listGroups() { return this.get('/v1/groups') },
   getGroup(id) { return this.get(`/v1/groups/${id}`) },

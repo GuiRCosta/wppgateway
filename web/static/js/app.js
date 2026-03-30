@@ -83,6 +83,7 @@ document.addEventListener('alpine:init', () => {
         { pattern: /^\/groups\/([^/]+)\/instances\/([^/]+)$/, page: 'instance-detail', paramKeys: ['groupId', 'instanceId'] },
         { pattern: /^\/broadcasts$/, page: 'broadcasts' },
         { pattern: /^\/broadcasts\/([^/]+)\/([^/]+)$/, page: 'broadcast-detail', paramKeys: ['groupId', 'broadcastId'] },
+        { pattern: /^\/logs$/, page: 'logs' },
         { pattern: /^\/login$/, page: 'login' },
       ]
 

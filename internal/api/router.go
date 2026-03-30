@@ -155,6 +155,10 @@ func NewRouter(deps Dependencies) *fiber.App {
 	// Audit
 	v1.Get("/account/audit-log", auditH.List)
 
+	// Logs
+	logsH := handler.NewLogsHandler()
+	v1.Get("/logs", logsH.List)
+
 	// Frontend static files
 	staticFS, _ := fs.Sub(web.StaticFS, "static")
 	app.Use("/static", filesystem.New(filesystem.Config{
@@ -167,6 +171,14 @@ func NewRouter(deps Dependencies) *fiber.App {
 		data, err := web.StaticFS.ReadFile("static/index.html")
 		if err != nil {
 			return c.Status(500).SendString("Frontend not found")
+		}
+		return c.Send(data)
+	})
+	app.Get("/docs", func(c *fiber.Ctx) error {
+		c.Set("Content-Type", "text/html")
+		data, err := web.StaticFS.ReadFile("static/docs.html")
+		if err != nil {
+			return c.Status(500).SendString("Docs not found")
 		}
 		return c.Send(data)
 	})
