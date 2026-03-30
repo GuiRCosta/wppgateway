@@ -14,7 +14,11 @@ FROM alpine:3.20
 
 RUN apk add --no-cache ca-certificates tzdata
 
+WORKDIR /app
+
 COPY --from=builder /bin/wpp-gateway /bin/wpp-gateway
+COPY migrations/ /app/migrations/
+COPY web/ /app/web/
 
 EXPOSE 8080
 
