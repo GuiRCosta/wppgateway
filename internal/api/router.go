@@ -69,7 +69,10 @@ func NewRouter(deps Dependencies) *fiber.App {
 
 	// Global middleware
 	app.Use(recover.New())
-	app.Use(helmet.New())
+	app.Use(helmet.New(helmet.Config{
+		CrossOriginEmbedderPolicy: "unsafe-none",
+		ContentSecurityPolicy:     "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; connect-src 'self'; img-src 'self' data:; font-src 'self'",
+	}))
 
 	allowedOrigins := os.Getenv("CORS_ORIGINS")
 	if allowedOrigins == "" {
