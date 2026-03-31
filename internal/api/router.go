@@ -52,15 +52,27 @@ func NewRouter(deps Dependencies) *fiber.App {
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			code := fiber.StatusInternalServerError
 			message := "Internal server error"
+			errCode := "internal_error"
 			if e, ok := err.(*fiber.Error); ok {
 				code = e.Code
 				message = e.Message
 			}
-			deps.Log.Error().Err(err).Str("path", c.Path()).Msg("unhandled error")
+
+			switch {
+			case code == fiber.StatusNotFound:
+				errCode = "not_found"
+				deps.Log.Warn().Str("path", c.Path()).Str("method", c.Method()).Msg("route not found")
+			case code >= 400 && code < 500:
+				errCode = "client_error"
+				deps.Log.Warn().Err(err).Str("path", c.Path()).Int("status", code).Msg("client error")
+			default:
+				deps.Log.Error().Err(err).Str("path", c.Path()).Int("status", code).Msg("unhandled error")
+			}
+
 			return c.Status(code).JSON(fiber.Map{
 				"success": false,
 				"error": fiber.Map{
-					"code":    "internal_error",
+					"code":    errCode,
 					"message": message,
 				},
 			})

@@ -686,8 +686,13 @@
                 </template>
               </select>
             </div>
+            <button x-show="selectedGroup" @click="showCreate = true" class="flex items-center gap-2 px-5 py-2.5 bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 rounded-xl text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800 dark:hover:bg-neutral-300 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+              <span x-text="t('new_broadcast')"></span>
+            </button>
           </div>
 
+          <!-- Broadcast list -->
           <div x-show="selectedGroup && broadcasts.length > 0" class="space-y-3">
             <template x-for="bc in broadcasts" :key="bc.id">
               <div class="bg-neutral-200/50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-300 dark:border-neutral-700 p-5">
@@ -696,16 +701,27 @@
                     <p class="text-xs font-mono text-neutral-500 dark:text-neutral-400" x-text="bc.id?.slice(0, 8) + '...'"></p>
                     <p class="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5" x-text="formatDateTime(bc.created_at)"></p>
                   </div>
-                  <span :class="[BroadcastStatusColors[bc.status]?.bg, BroadcastStatusColors[bc.status]?.text]" class="px-2.5 py-1 rounded-full text-[0.6rem] font-semibold uppercase tracking-widest" x-text="getBroadcastStatusLabel(bc.status)"></span>
+                  <div class="flex items-center gap-2">
+                    <span :class="[BroadcastStatusColors[bc.status]?.bg, BroadcastStatusColors[bc.status]?.text]" class="px-2.5 py-1 rounded-full text-[0.6rem] font-semibold uppercase tracking-widest" x-text="getBroadcastStatusLabel(bc.status)"></span>
+                  </div>
                 </div>
                 <!-- Progress bar -->
                 <div class="w-full bg-neutral-300 dark:bg-neutral-700 rounded-full h-2 mb-2">
-                  <div class="bg-emerald-500 h-2 rounded-full progress-bar" :style="'width: ' + (bc.total > 0 ? (bc.sent / bc.total * 100) : 0) + '%'"></div>
+                  <div class="bg-emerald-500 h-2 rounded-full progress-bar" :style="'width: ' + (bc.total > 0 ? ((bc.sent + bc.failed) / bc.total * 100) : 0) + '%'"></div>
                 </div>
                 <div class="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
                   <span><span x-text="bc.sent || 0"></span>/<span x-text="bc.total || 0"></span> <span x-text="t('sent').toLowerCase()"></span></span>
                   <span><span x-text="bc.delivered || 0"></span> <span x-text="t('delivered').toLowerCase()"></span></span>
                   <span class="text-red-500 dark:text-red-400"><span x-text="bc.failed || 0"></span> <span x-text="t('failures')"></span></span>
+                </div>
+                <!-- Action buttons -->
+                <div class="flex items-center gap-2 mt-3 pt-3 border-t border-neutral-300 dark:border-neutral-700">
+                  <button x-show="bc.status === 'processing'" @click="pauseBroadcast(bc)" class="px-3 py-1.5 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 text-[0.65rem] font-semibold uppercase tracking-widest hover:bg-yellow-200 dark:hover:bg-yellow-900/50 transition-colors" x-text="t('pause')"></button>
+                  <button x-show="bc.status === 'paused'" @click="resumeBroadcast(bc)" class="px-3 py-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-[0.65rem] font-semibold uppercase tracking-widest hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors" x-text="t('resume')"></button>
+                  <button x-show="bc.status === 'processing' || bc.status === 'paused'" @click="cancelBroadcast(bc)" class="px-3 py-1.5 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 text-[0.65rem] font-semibold uppercase tracking-widest hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors" x-text="t('cancel')"></button>
+                  <button x-show="bc.status === 'processing' || bc.status === 'paused' || bc.status === 'pending'" @click="refreshStatus(bc)" class="ml-auto px-3 py-1.5 rounded-lg bg-neutral-300/50 dark:bg-neutral-700/50 text-neutral-600 dark:text-neutral-400 text-[0.65rem] font-semibold uppercase tracking-widest hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M2.985 14.652"/></svg>
+                  </button>
                 </div>
               </div>
             </template>
@@ -716,6 +732,61 @@
           </div>
           <div x-show="!selectedGroup" class="text-center py-12">
             <p class="text-sm text-neutral-500 dark:text-neutral-400 uppercase tracking-widest" x-text="t('select_group_hint')"></p>
+          </div>
+
+          <!-- CREATE BROADCAST MODAL -->
+          <div x-show="showCreate" x-transition.opacity class="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="showCreate = false">
+            <div class="bg-[#E6E6E6] dark:bg-neutral-900 rounded-2xl p-6 shadow-2xl max-w-lg w-full mx-4 animate-scale-in border border-neutral-300 dark:border-neutral-700 max-h-[90vh] overflow-y-auto" @click.stop>
+              <h3 class="text-lg font-oswald font-medium tracking-tight mb-6" x-text="t('new_broadcast')"></h3>
+              <form @submit.prevent="createBroadcast()" class="space-y-4">
+                <!-- Message -->
+                <div>
+                  <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2" x-text="t('message')"></label>
+                  <textarea x-model="form.message" rows="4" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-600 text-sm focus:outline-none focus:border-neutral-500 dark:text-neutral-100 resize-none font-mono" :placeholder="t('message_text')" required></textarea>
+                  <p class="text-[0.6rem] text-neutral-400 dark:text-neutral-500 mt-1">Spintax: {oi|ola|hey} — Variables: {{nome}}</p>
+                </div>
+
+                <!-- Recipients -->
+                <div>
+                  <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2">
+                    <span x-text="t('recipients')"></span>
+                    <span x-show="recipientCount > 0" class="ml-2 text-neutral-500">(<span x-text="recipientCount"></span>)</span>
+                  </label>
+                  <textarea x-model="form.recipients" @input="updateRecipientCount()" rows="5" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-600 text-sm focus:outline-none focus:border-neutral-500 dark:text-neutral-100 resize-none font-mono" :placeholder="t('recipients_hint')" required></textarea>
+                </div>
+
+                <!-- Options -->
+                <div>
+                  <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2" x-text="t('options')"></label>
+                  <div class="space-y-2">
+                    <label class="flex items-center gap-3 text-sm text-neutral-700 dark:text-neutral-300 cursor-pointer select-none">
+                      <input type="checkbox" x-model="form.shuffle" class="rounded border-neutral-400 dark:border-neutral-600">
+                      <span x-text="t('shuffle_recipients')"></span>
+                    </label>
+                    <label class="flex items-center gap-3 text-sm text-neutral-700 dark:text-neutral-300 cursor-pointer select-none">
+                      <input type="checkbox" x-model="form.spintax" class="rounded border-neutral-400 dark:border-neutral-600">
+                      <span x-text="t('spintax')"></span>
+                    </label>
+                    <label class="flex items-center gap-3 text-sm text-neutral-700 dark:text-neutral-300 cursor-pointer select-none">
+                      <input type="checkbox" x-model="form.skipInvalid" class="rounded border-neutral-400 dark:border-neutral-600">
+                      <span x-text="t('skip_invalid')"></span>
+                    </label>
+                    <label class="flex items-center gap-3 text-sm text-neutral-700 dark:text-neutral-300 cursor-pointer select-none">
+                      <input type="checkbox" x-model="form.skipNonWhatsapp" class="rounded border-neutral-400 dark:border-neutral-600">
+                      <span x-text="t('skip_non_whatsapp')"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex gap-3 justify-end pt-2">
+                  <button type="button" @click="showCreate = false" class="px-5 py-2 rounded-full border border-neutral-400 dark:border-neutral-600 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors" x-text="t('cancel')"></button>
+                  <button type="submit" :disabled="sending" class="px-5 py-2 rounded-full bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800 dark:hover:bg-neutral-300 transition-colors disabled:opacity-50">
+                    <span x-text="sending ? t('sending') : t('new_broadcast')"></span>
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
 
@@ -1198,7 +1269,12 @@
         broadcasts: [],
         selectedGroup: '',
         loading: false,
+        sending: false,
+        showCreate: false,
+        recipientCount: 0,
+        form: { message: '', recipients: '', shuffle: true, spintax: false, skipInvalid: true, skipNonWhatsapp: false },
         _loaded: false,
+        _refreshTimer: null,
 
         async load() {
           if (this._loaded) return
@@ -1215,10 +1291,114 @@
           try {
             const res = await Api.listBroadcasts(this.selectedGroup)
             this.broadcasts = res?.data || []
+            this.startAutoRefresh()
           } catch (err) {
             Alpine.store('toast').show('error', err.message)
           } finally {
             this.loading = false
+          }
+        },
+
+        startAutoRefresh() {
+          this.stopAutoRefresh()
+          const hasActive = this.broadcasts.some(bc => bc.status === 'processing' || bc.status === 'pending')
+          if (hasActive) {
+            this._refreshTimer = setInterval(() => this.loadBroadcasts(), 5000)
+          }
+        },
+
+        stopAutoRefresh() {
+          if (this._refreshTimer) {
+            clearInterval(this._refreshTimer)
+            this._refreshTimer = null
+          }
+        },
+
+        updateRecipientCount() {
+          const lines = this.form.recipients.split('\n').filter(l => l.trim().length > 0)
+          this.recipientCount = lines.length
+        },
+
+        parseRecipients() {
+          return this.form.recipients
+            .split('\n')
+            .map(l => l.trim().replace(/\D/g, ''))
+            .filter(l => l.length > 0)
+        },
+
+        resetForm() {
+          this.form = { message: '', recipients: '', shuffle: true, spintax: false, skipInvalid: true, skipNonWhatsapp: false }
+          this.recipientCount = 0
+        },
+
+        async createBroadcast() {
+          const recipients = this.parseRecipients()
+          if (recipients.length === 0) return
+          this.sending = true
+          try {
+            const payload = {
+              recipients,
+              type: 'text',
+              content: { text: this.form.message },
+              options: {
+                shuffle_recipients: this.form.shuffle,
+                spintax: this.form.spintax,
+                skip_invalid_numbers: this.form.skipInvalid,
+                skip_non_whatsapp: this.form.skipNonWhatsapp,
+              },
+            }
+            const res = await Api.createBroadcast(this.selectedGroup, payload)
+            const mins = res?.data?.estimated_duration_minutes || 0
+            Alpine.store('toast').show('success', `${t('broadcast_created')} — ~${mins} ${t('minutes')}`, 6000)
+            this.showCreate = false
+            this.resetForm()
+            await this.loadBroadcasts()
+          } catch (err) {
+            Alpine.store('toast').show('error', err.message)
+          } finally {
+            this.sending = false
+          }
+        },
+
+        async pauseBroadcast(bc) {
+          try {
+            await Api.pauseBroadcast(this.selectedGroup, bc.id)
+            Alpine.store('toast').show('success', t('broadcast_paused'))
+            await this.loadBroadcasts()
+          } catch (err) {
+            Alpine.store('toast').show('error', err.message)
+          }
+        },
+
+        async resumeBroadcast(bc) {
+          try {
+            await Api.resumeBroadcast(this.selectedGroup, bc.id)
+            Alpine.store('toast').show('success', t('broadcast_resumed'))
+            await this.loadBroadcasts()
+          } catch (err) {
+            Alpine.store('toast').show('error', err.message)
+          }
+        },
+
+        async cancelBroadcast(bc) {
+          if (!confirm(t('confirm_cancel_broadcast'))) return
+          try {
+            await Api.cancelBroadcast(this.selectedGroup, bc.id)
+            Alpine.store('toast').show('success', t('broadcast_cancelled'))
+            await this.loadBroadcasts()
+          } catch (err) {
+            Alpine.store('toast').show('error', err.message)
+          }
+        },
+
+        async refreshStatus(bc) {
+          try {
+            const res = await Api.getBroadcast(this.selectedGroup, bc.id)
+            if (res?.data) {
+              this.broadcasts = this.broadcasts.map(b => b.id === bc.id ? { ...b, ...res.data } : b)
+            }
+          } catch (err) {
+            Alpine.store('toast').show('error', err.message)
           }
         },
       }
