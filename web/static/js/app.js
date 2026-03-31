@@ -21,6 +21,37 @@ document.addEventListener('alpine:init', () => {
     },
   })
 
+  // Theme Store
+  Alpine.store('theme', {
+    dark: false,
+    init() {
+      const saved = localStorage.getItem('wpp_theme')
+      if (saved) {
+        this.dark = saved === 'dark'
+      } else {
+        this.dark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      }
+      this.apply()
+    },
+    toggle() {
+      this.dark = !this.dark
+      localStorage.setItem('wpp_theme', this.dark ? 'dark' : 'light')
+      this.apply()
+    },
+    apply() {
+      document.documentElement.classList.toggle('dark', this.dark)
+    }
+  })
+
+  // Lang Store
+  Alpine.store('lang', {
+    current: getLang(),
+    toggle() {
+      this.current = this.current === 'pt' ? 'en' : 'pt'
+      setLang(this.current)
+    }
+  })
+
   // Auth Store
   Alpine.store('auth', {
     authenticated: false,
@@ -46,7 +77,7 @@ document.addEventListener('alpine:init', () => {
         const res = await Api.validateKey()
         this.tenant = res.data
         this.authenticated = true
-        Alpine.store('toast').show('success', 'Conectado com sucesso')
+        Alpine.store('toast').show('success', t('connected_success'))
         Alpine.store('router').navigate('dashboard')
       } catch (err) {
         Api.clearApiKey()

@@ -1,0 +1,420 @@
+// WPP Gateway - Internationalization (i18n)
+
+const translations = {
+  pt: {
+    // Login
+    'login': 'Login',
+    'register': 'Registro',
+    'api_key': 'API Key',
+    'enter_api_key': 'Insira sua API key',
+    'connecting': 'Conectando...',
+    'connect': 'Conectar',
+    'tenant_name': 'Nome do Tenant',
+    'creating': 'Criando...',
+    'create_account': 'Criar Conta',
+    'save_api_key': 'Sua API Key (salve agora!)',
+    'copied': 'Copiado para a area de transferencia',
+    'copy_failed': 'Falha ao copiar',
+    'invalid_api_key': 'API key invalida',
+    'account_created': 'Conta criada! Salve sua API key.',
+    'account_create_error': 'Erro ao criar conta',
+
+    // Nav
+    'overview': 'Overview',
+    'dashboard': 'Dashboard',
+    'messaging': 'Messaging',
+    'groups': 'Grupos',
+    'broadcasts': 'Broadcasts',
+    'resources': 'Recursos',
+    'logs': 'Logs',
+    'api_docs': 'API Docs',
+    'logout': 'Sair',
+
+    // Dashboard
+    'quick_actions': 'Acoes Rapidas',
+    'view_groups': 'Ver Grupos',
+    'total_groups': 'Total de grupos',
+    'total_instances': 'Total de instancias',
+    'active_instances': 'Instancias ativas',
+    'banned_instances': 'Instancias banidas',
+    'groups_label': 'Grupos',
+    'instances_label': 'Instancias',
+    'available_label': 'Disponiveis',
+    'banned_label': 'Banidas',
+    'dashboard_load_error': 'Erro ao carregar dashboard',
+
+    // Groups
+    'search_groups': 'Buscar grupos...',
+    'new_group': 'Novo Grupo',
+    'edit_group': 'Editar Grupo',
+    'no_groups': 'Nenhum grupo encontrado',
+    'create_first_group': 'Crie seu primeiro grupo para comecar',
+    'instances': 'instancias',
+    'active': 'Ativo',
+    'inactive': 'Inativo',
+    'name': 'Nome',
+    'strategy': 'Estrategia',
+    'webhook_url_optional': 'Webhook URL (opcional)',
+    'cancel': 'Cancelar',
+    'save': 'Salvar',
+    'saving': 'Salvando...',
+    'delete': 'Excluir',
+    'pause': 'Pausar',
+    'resume': 'Retomar',
+    'close': 'Fechar',
+    'reload': 'Recarregar',
+    'groups_load_error': 'Erro ao carregar grupos',
+    'group_load_error': 'Erro ao carregar grupo',
+
+    // Instances
+    'new_instance': 'Nova Instancia',
+    'no_instances': 'Nenhuma instancia',
+    'add_instance_hint': 'Adicione uma instancia para comecar',
+    'add': 'Adicionar',
+    'create': 'Criar',
+    'details': 'Detalhes',
+    'connect_btn': 'Conectar',
+    'disconnect': 'Desconectar',
+    'restart': 'Reiniciar',
+    'msgs_today': 'Msgs Hoje',
+    'delivery': 'Entrega',
+    'priority': 'Prioridade',
+    'budget_day': 'Budget/dia',
+    'budget_hour': 'Budget/hora',
+    'instance_label': 'Instancia',
+    'instance_load_error': 'Erro ao carregar instancia',
+
+    // Strategy descriptions
+    'failover_desc': 'Failover - Usa instancia backup em caso de falha',
+    'rotation_desc': 'Rotation - Distribui entre instancias',
+    'hybrid_desc': 'Hybrid - Combinacao de failover e rotation',
+    'failover_strategy_desc': 'Estrategia Failover — a prioridade define qual instancia e a principal. Se falhar, a proxima assume.',
+    'rotation_strategy_desc': 'Estrategia Rotacao — as mensagens sao distribuidas entre instancias respeitando o budget de cada uma.',
+    'hybrid_strategy_desc': 'Estrategia Hibrido — rotacao com failover automatico. Defina prioridade e budget.',
+    'priority_hint': 'Prioridade 1 = instancia principal. 2, 3... = backups em ordem.',
+    'max_msgs_day': 'Max mensagens por dia nesta instancia.',
+    'max_msgs_hour': 'Max mensagens por hora nesta instancia.',
+    'failover_order': 'Ordem de failover quando uma instancia falha.',
+    'priority_main': 'principal = 1',
+    'fallback_order': 'fallback order',
+
+    // Metrics
+    'sent': 'Enviadas',
+    'delivered': 'Entregues',
+    'failed': 'Falharam',
+    'delivery_rate': 'Taxa Entrega',
+
+    // Tabs
+    'tab_instances': 'instancias',
+    'tab_metrics': 'metricas',
+    'tab_webhook': 'webhook',
+    'tab_blacklist': 'blacklist',
+
+    // Webhook
+    'webhook_config': 'Configuracao de Webhook',
+    'test': 'Testar',
+    'webhook_configured': 'Webhook configurado',
+    'webhook_test_sent': 'Webhook de teste enviado',
+
+    // Blacklist
+    'add_numbers': 'Adicionar Numeros',
+    'numbers_added': 'Numeros adicionados',
+    'removed': 'Removido',
+
+    // Broadcasts
+    'new_broadcast': 'Novo Broadcast',
+    'no_broadcasts': 'Nenhum broadcast encontrado',
+    'select_group': 'Selecione um grupo',
+    'select_group_hint': 'Selecione um grupo para ver broadcasts',
+    'recipients': 'destinatarios',
+    'progress': 'Progresso',
+    'total': 'Total',
+    'grupo': 'Grupo',
+
+    // Logs
+    'system_logs': 'Logs do Sistema',
+    'refresh': 'Atualizar',
+    'auto_refresh': 'Auto-refresh',
+    'search_logs': 'Buscar nos logs...',
+    'no_logs': 'Nenhum log encontrado',
+    'logs_appear_hint': 'Os logs aparecerao conforme a aplicacao processa requests',
+    'loading_logs': 'Carregando logs...',
+    'all_levels': 'Todos os niveis',
+    'lines': 'linhas',
+    'no_extra_fields': 'Sem campos adicionais',
+
+    // Instance Detail
+    'scan_qr': 'Escanear QR Code',
+    'scan_qr_hint': 'Abra o WhatsApp e escaneie o codigo',
+    'pair_phone': 'Ou pareie com codigo',
+    'phone_number': 'Numero de Telefone',
+    'pair': 'Parear',
+    'loading': 'Carregando...',
+    'qr_code': 'QR Code',
+    'qr_instruction': 'Abra o WhatsApp no celular e escaneie o QR code',
+    'already_connected': 'Ja conectado!',
+    'qr_not_available': 'QR code nao disponivel',
+    'whatsapp_connected': 'WhatsApp conectado!',
+    'code_generated': 'Codigo gerado! Digite no WhatsApp.',
+    'restarting': 'Reiniciando...',
+
+    // Confirm
+    'confirm': 'Confirmar',
+    'confirm_delete_group': 'Tem certeza que deseja excluir este grupo?',
+    'confirm_delete_instance': 'Tem certeza que deseja excluir esta instancia?',
+
+    // Status
+    'disconnected': 'Desconectado',
+    'connecting_status': 'Conectando',
+    'available': 'Disponivel',
+    'resting': 'Descansando',
+    'warming': 'Aquecendo',
+    'suspect': 'Suspeito',
+    'banned': 'Banido',
+
+    // Strategy labels
+    'failover': 'Failover',
+    'rotation': 'Rotacao',
+    'hybrid': 'Hibrido',
+
+    // Broadcast status
+    'pending': 'Pendente',
+    'processing': 'Processando',
+    'paused': 'Pausado',
+    'completed': 'Concluido',
+    'cancelled': 'Cancelado',
+    'failed_status': 'Falhou',
+
+    // Time
+    'now': 'agora',
+    'min_ago': 'min atras',
+    'h_ago': 'h atras',
+    'd_ago': 'd atras',
+
+    // Messages
+    'connected_success': 'Conectado com sucesso',
+    'session_expired': 'Sessao expirada. Faca login novamente.',
+    'group_created': 'Grupo criado',
+    'group_updated': 'Grupo atualizado',
+    'group_deleted': 'Grupo excluido',
+    'instance_created': 'Instancia criada',
+    'instance_deleted': 'Instancia excluida',
+    'group_paused': 'Grupo pausado',
+    'group_resumed': 'Grupo retomado',
+    'unknown_error': 'Erro desconhecido',
+    'failures': 'falhas',
+
+    // Theme
+    'dark_mode': 'Modo escuro',
+    'light_mode': 'Modo claro',
+    'language': 'Idioma',
+
+    // Cell phone placeholder
+    'cell_placeholder': 'Celular 01',
+  },
+  en: {
+    'login': 'Login',
+    'register': 'Register',
+    'api_key': 'API Key',
+    'enter_api_key': 'Enter your API key',
+    'connecting': 'Connecting...',
+    'connect': 'Connect',
+    'tenant_name': 'Tenant Name',
+    'creating': 'Creating...',
+    'create_account': 'Create Account',
+    'save_api_key': 'Your API Key (save it now!)',
+    'copied': 'Copied to clipboard',
+    'copy_failed': 'Failed to copy',
+    'invalid_api_key': 'Invalid API key',
+    'account_created': 'Account created! Save your API key.',
+    'account_create_error': 'Error creating account',
+
+    'overview': 'Overview',
+    'dashboard': 'Dashboard',
+    'messaging': 'Messaging',
+    'groups': 'Groups',
+    'broadcasts': 'Broadcasts',
+    'resources': 'Resources',
+    'logs': 'Logs',
+    'api_docs': 'API Docs',
+    'logout': 'Logout',
+
+    'quick_actions': 'Quick Actions',
+    'view_groups': 'View Groups',
+    'total_groups': 'Total groups',
+    'total_instances': 'Total instances',
+    'active_instances': 'Active instances',
+    'banned_instances': 'Banned instances',
+    'groups_label': 'Groups',
+    'instances_label': 'Instances',
+    'available_label': 'Available',
+    'banned_label': 'Banned',
+    'dashboard_load_error': 'Error loading dashboard',
+
+    'search_groups': 'Search groups...',
+    'new_group': 'New Group',
+    'edit_group': 'Edit Group',
+    'no_groups': 'No groups found',
+    'create_first_group': 'Create your first group to get started',
+    'instances': 'instances',
+    'active': 'Active',
+    'inactive': 'Inactive',
+    'name': 'Name',
+    'strategy': 'Strategy',
+    'webhook_url_optional': 'Webhook URL (optional)',
+    'cancel': 'Cancel',
+    'save': 'Save',
+    'saving': 'Saving...',
+    'delete': 'Delete',
+    'pause': 'Pause',
+    'resume': 'Resume',
+    'close': 'Close',
+    'reload': 'Reload',
+    'groups_load_error': 'Error loading groups',
+    'group_load_error': 'Error loading group',
+
+    'new_instance': 'New Instance',
+    'no_instances': 'No instances',
+    'add_instance_hint': 'Add an instance to get started',
+    'add': 'Add',
+    'create': 'Create',
+    'details': 'Details',
+    'connect_btn': 'Connect',
+    'disconnect': 'Disconnect',
+    'restart': 'Restart',
+    'msgs_today': 'Msgs Today',
+    'delivery': 'Delivery',
+    'priority': 'Priority',
+    'budget_day': 'Budget/day',
+    'budget_hour': 'Budget/hour',
+    'instance_label': 'Instance',
+    'instance_load_error': 'Error loading instance',
+
+    'failover_desc': 'Failover - Uses backup instance on failure',
+    'rotation_desc': 'Rotation - Distributes across instances',
+    'hybrid_desc': 'Hybrid - Combination of failover and rotation',
+    'failover_strategy_desc': 'Failover Strategy — priority defines the main instance. If it fails, the next one takes over.',
+    'rotation_strategy_desc': 'Rotation Strategy — messages are distributed across instances respecting each budget.',
+    'hybrid_strategy_desc': 'Hybrid Strategy — rotation with automatic failover. Set priority and budget.',
+    'priority_hint': 'Priority 1 = main instance. 2, 3... = backups in order.',
+    'max_msgs_day': 'Max messages per day for this instance.',
+    'max_msgs_hour': 'Max messages per hour for this instance.',
+    'failover_order': 'Failover order when an instance fails.',
+    'priority_main': 'main = 1',
+    'fallback_order': 'fallback order',
+
+    'sent': 'Sent',
+    'delivered': 'Delivered',
+    'failed': 'Failed',
+    'delivery_rate': 'Delivery Rate',
+
+    'tab_instances': 'instances',
+    'tab_metrics': 'metrics',
+    'tab_webhook': 'webhook',
+    'tab_blacklist': 'blacklist',
+
+    'webhook_config': 'Webhook Configuration',
+    'test': 'Test',
+    'webhook_configured': 'Webhook configured',
+    'webhook_test_sent': 'Test webhook sent',
+
+    'add_numbers': 'Add Numbers',
+    'numbers_added': 'Numbers added',
+    'removed': 'Removed',
+
+    'new_broadcast': 'New Broadcast',
+    'no_broadcasts': 'No broadcasts found',
+    'select_group': 'Select a group',
+    'select_group_hint': 'Select a group to view broadcasts',
+    'recipients': 'recipients',
+    'progress': 'Progress',
+    'total': 'Total',
+    'grupo': 'Group',
+
+    'system_logs': 'System Logs',
+    'refresh': 'Refresh',
+    'auto_refresh': 'Auto-refresh',
+    'search_logs': 'Search logs...',
+    'no_logs': 'No logs found',
+    'logs_appear_hint': 'Logs will appear as the application processes requests',
+    'loading_logs': 'Loading logs...',
+    'all_levels': 'All levels',
+    'lines': 'lines',
+    'no_extra_fields': 'No extra fields',
+
+    'scan_qr': 'Scan QR Code',
+    'scan_qr_hint': 'Open WhatsApp and scan the code',
+    'pair_phone': 'Or pair with code',
+    'phone_number': 'Phone Number',
+    'pair': 'Pair',
+    'loading': 'Loading...',
+    'qr_code': 'QR Code',
+    'qr_instruction': 'Open WhatsApp on your phone and scan the QR code',
+    'already_connected': 'Already connected!',
+    'qr_not_available': 'QR code not available',
+    'whatsapp_connected': 'WhatsApp connected!',
+    'code_generated': 'Code generated! Enter it in WhatsApp.',
+    'restarting': 'Restarting...',
+
+    'confirm': 'Confirm',
+    'confirm_delete_group': 'Are you sure you want to delete this group?',
+    'confirm_delete_instance': 'Are you sure you want to delete this instance?',
+
+    'disconnected': 'Disconnected',
+    'connecting_status': 'Connecting',
+    'available': 'Available',
+    'resting': 'Resting',
+    'warming': 'Warming Up',
+    'suspect': 'Suspect',
+    'banned': 'Banned',
+
+    'failover': 'Failover',
+    'rotation': 'Rotation',
+    'hybrid': 'Hybrid',
+
+    'pending': 'Pending',
+    'processing': 'Processing',
+    'paused': 'Paused',
+    'completed': 'Completed',
+    'cancelled': 'Cancelled',
+    'failed_status': 'Failed',
+
+    'now': 'now',
+    'min_ago': 'min ago',
+    'h_ago': 'h ago',
+    'd_ago': 'd ago',
+
+    'connected_success': 'Connected successfully',
+    'session_expired': 'Session expired. Please login again.',
+    'group_created': 'Group created',
+    'group_updated': 'Group updated',
+    'group_deleted': 'Group deleted',
+    'instance_created': 'Instance created',
+    'instance_deleted': 'Instance deleted',
+    'group_paused': 'Group paused',
+    'group_resumed': 'Group resumed',
+    'unknown_error': 'Unknown error',
+    'failures': 'failures',
+
+    'dark_mode': 'Dark mode',
+    'light_mode': 'Light mode',
+    'language': 'Language',
+
+    'cell_placeholder': 'Phone 01',
+  }
+}
+
+let currentLang = localStorage.getItem('wpp_lang') || 'pt'
+
+function t(key) {
+  return translations[currentLang]?.[key] || translations['pt']?.[key] || key
+}
+
+function setLang(lang) {
+  currentLang = lang
+  localStorage.setItem('wpp_lang', lang)
+}
+
+function getLang() {
+  return currentLang
+}

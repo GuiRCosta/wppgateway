@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="/static/css/app.css"/>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
@@ -22,11 +23,12 @@
       },
     }
   </script>
+  <script src="/static/js/i18n.js"></script>
   <script src="/static/js/utils.js"></script>
   <script src="/static/js/api.js"></script>
   <script src="/static/js/app.js"></script>
 </head>
-<body class="min-h-screen font-space bg-[#E6E6E6] text-neutral-950 antialiased" x-data x-init="await $store.auth.init(); $store.router.init()">
+<body class="min-h-screen font-space bg-[#E6E6E6] dark:bg-[#1a1a1a] text-neutral-950 dark:text-neutral-100 antialiased" x-data x-init="$store.theme.init(); await $store.auth.init(); $store.router.init()">
 
   <!-- TOAST NOTIFICATIONS -->
   <div class="fixed top-4 right-4 z-[100] flex flex-col gap-2 max-w-sm">
@@ -54,11 +56,11 @@
 
   <!-- CONFIRM MODAL -->
   <div x-show="$store.ui.modalOpen" x-transition.opacity class="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="$store.ui.closeModal()">
-    <div class="bg-[#E6E6E6] rounded-2xl p-6 shadow-2xl max-w-md w-full mx-4 animate-scale-in border border-neutral-300">
-      <p class="text-sm text-neutral-700 mb-6" x-text="$store.ui.modalContent"></p>
+    <div class="bg-[#E6E6E6] dark:bg-neutral-900 rounded-2xl p-6 shadow-2xl max-w-md w-full mx-4 animate-scale-in border border-neutral-300 dark:border-neutral-700">
+      <p class="text-sm text-neutral-700 dark:text-neutral-300 mb-6" x-text="$store.ui.modalContent"></p>
       <div class="flex gap-3 justify-end">
-        <button @click="$store.ui.closeModal()" class="px-5 py-2 rounded-full border border-neutral-400 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors">Cancelar</button>
-        <button @click="$store.ui.executeConfirm()" class="px-5 py-2 rounded-full bg-red-600 text-white text-xs font-semibold uppercase tracking-widest hover:bg-red-700 transition-colors">Confirmar</button>
+        <button @click="$store.ui.closeModal()" class="px-5 py-2 rounded-full border border-neutral-400 dark:border-neutral-600 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors" x-text="t('cancel')"></button>
+        <button @click="$store.ui.executeConfirm()" class="px-5 py-2 rounded-full bg-red-600 text-white text-xs font-semibold uppercase tracking-widest hover:bg-red-700 transition-colors" x-text="t('confirm')"></button>
       </div>
     </div>
   </div>
@@ -69,30 +71,39 @@
       <div class="text-center mb-10">
         <div class="flex items-center justify-center gap-2 mb-6">
           <div class="flex gap-1">
-            <div class="w-3 h-8 bg-neutral-950 rounded-full"></div>
-            <div class="w-3 h-5 bg-neutral-950 rounded-full"></div>
-            <div class="w-3 h-8 bg-neutral-950 rounded-full"></div>
+            <div class="w-3 h-8 bg-neutral-950 dark:bg-neutral-100 rounded-full"></div>
+            <div class="w-3 h-5 bg-neutral-950 dark:bg-neutral-100 rounded-full"></div>
+            <div class="w-3 h-8 bg-neutral-950 dark:bg-neutral-100 rounded-full"></div>
           </div>
         </div>
         <h1 class="text-4xl font-oswald font-medium tracking-tight mb-2">WPP GATEWAY</h1>
-        <p class="text-xs uppercase tracking-widest text-neutral-500">WhatsApp Gateway Manager</p>
+        <p class="text-xs uppercase tracking-widest text-neutral-500 dark:text-neutral-400">WhatsApp Gateway Manager</p>
+      </div>
+
+      <!-- Language & Theme toggles on login page -->
+      <div class="flex justify-center gap-3 mb-6">
+        <button @click="$store.lang.toggle()" class="px-3 py-1.5 rounded-full border border-neutral-400 dark:border-neutral-600 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors" x-text="$store.lang.current === 'pt' ? 'EN' : 'PT'"></button>
+        <button @click="$store.theme.toggle()" class="p-1.5 rounded-full border border-neutral-400 dark:border-neutral-600 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors">
+          <svg x-show="!$store.theme.dark" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
+          <svg x-show="$store.theme.dark" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>
+        </button>
       </div>
 
       <!-- Login Tab -->
-      <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-6">
+      <div class="bg-neutral-200/50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-300 dark:border-neutral-700 p-6">
         <div class="flex gap-4 mb-6">
-          <button @click="tab = 'login'" :class="tab === 'login' ? 'bg-neutral-950 text-white' : 'text-neutral-600 hover:bg-neutral-300'" class="flex-1 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-widest transition-colors">Login</button>
-          <button @click="tab = 'register'" :class="tab === 'register' ? 'bg-neutral-950 text-white' : 'text-neutral-600 hover:bg-neutral-300'" class="flex-1 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-widest transition-colors">Registro</button>
+          <button @click="tab = 'login'" :class="tab === 'login' ? 'bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950' : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-300 dark:hover:bg-neutral-700'" class="flex-1 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-widest transition-colors" x-text="t('login')"></button>
+          <button @click="tab = 'register'" :class="tab === 'register' ? 'bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950' : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-300 dark:hover:bg-neutral-700'" class="flex-1 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-widest transition-colors" x-text="t('register')"></button>
         </div>
 
         <!-- Login Form -->
         <form x-show="tab === 'login'" @submit.prevent="doLogin()" class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">API Key</label>
+            <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2" x-text="t('api_key')"></label>
             <div class="relative">
-              <input :type="showKey ? 'text' : 'password'" x-model="apiKey" placeholder="Insira sua API key"
-                class="w-full px-4 py-3 rounded-xl bg-[#E6E6E6] border border-neutral-300 text-sm font-space focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-colors" required/>
-              <button type="button" @click="showKey = !showKey" class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600">
+              <input :type="showKey ? 'text' : 'password'" x-model="apiKey" :placeholder="t('enter_api_key')"
+                class="w-full px-4 py-3 rounded-xl bg-[#E6E6E6] dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 text-sm font-space focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-colors dark:text-neutral-100 dark:placeholder-neutral-500" required/>
+              <button type="button" @click="showKey = !showKey" class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300">
                 <svg x-show="!showKey" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 <svg x-show="showKey" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
               </button>
@@ -101,9 +112,9 @@
           <button type="submit" :disabled="loading" class="w-full group transition-all duration-300 overflow-hidden font-medium text-neutral-200 bg-gradient-to-r from-neutral-700 to-neutral-800 rounded-full py-3 relative btn-press" style="box-shadow: 0 15px 33px -12px rgba(38,38,38,0.7), inset 0 4px 6.3px rgba(82,82,82,0.5), inset 0 -5px 6.3px rgba(23,23,23,0.8)">
             <div class="group-hover:translate-y-0 transition-transform duration-300 bg-white/10 absolute inset-0 translate-y-full"></div>
             <span class="relative flex items-center justify-center gap-2 text-xs font-semibold tracking-widest uppercase">
-              <template x-if="loading"><span class="animate-pulse-soft">Conectando...</span></template>
+              <template x-if="loading"><span class="animate-pulse-soft" x-text="t('connecting')"></span></template>
               <template x-if="!loading">
-                <span class="flex items-center gap-2">Conectar <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7"/></svg></span>
+                <span class="flex items-center gap-2"><span x-text="t('connect')"></span> <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-7-7 7 7-7 7"/></svg></span>
               </template>
             </span>
           </button>
@@ -112,20 +123,20 @@
         <!-- Register Form -->
         <form x-show="tab === 'register'" @submit.prevent="doRegister()" class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Nome do Tenant</label>
-            <input type="text" x-model="tenantName" placeholder="Minha Empresa" class="w-full px-4 py-3 rounded-xl bg-[#E6E6E6] border border-neutral-300 text-sm font-space focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-colors" required/>
+            <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2" x-text="t('tenant_name')"></label>
+            <input type="text" x-model="tenantName" placeholder="Minha Empresa" class="w-full px-4 py-3 rounded-xl bg-[#E6E6E6] dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-600 text-sm font-space focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-colors dark:text-neutral-100 dark:placeholder-neutral-500" required/>
           </div>
-          <button type="submit" :disabled="loading" class="w-full px-5 py-3 rounded-full border border-neutral-400 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors btn-press">
-            <template x-if="loading"><span class="animate-pulse-soft">Criando...</span></template>
-            <template x-if="!loading"><span>Criar Conta</span></template>
+          <button type="submit" :disabled="loading" class="w-full px-5 py-3 rounded-full border border-neutral-400 dark:border-neutral-600 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors btn-press">
+            <template x-if="loading"><span class="animate-pulse-soft" x-text="t('creating')"></span></template>
+            <template x-if="!loading"><span x-text="t('create_account')"></span></template>
           </button>
           <!-- Show generated key -->
-          <div x-show="generatedKey" class="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-200">
-            <p class="text-xs font-semibold uppercase tracking-widest text-emerald-800 mb-2">Sua API Key (salve agora!)</p>
+          <div x-show="generatedKey" class="mt-4 p-4 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl border border-emerald-200 dark:border-emerald-800">
+            <p class="text-xs font-semibold uppercase tracking-widest text-emerald-800 dark:text-emerald-300 mb-2" x-text="t('save_api_key')"></p>
             <div class="flex items-center gap-2">
-              <code class="flex-1 text-xs bg-white px-3 py-2 rounded-lg border break-all" x-text="generatedKey"></code>
-              <button @click="copyToClipboard(generatedKey)" class="p-2 rounded-lg hover:bg-emerald-100 transition-colors">
-                <svg class="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+              <code class="flex-1 text-xs bg-white dark:bg-neutral-800 px-3 py-2 rounded-lg border dark:border-neutral-700 break-all" x-text="generatedKey"></code>
+              <button @click="copyToClipboard(generatedKey)" class="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors">
+                <svg class="w-4 h-4 text-emerald-700 dark:text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
               </button>
             </div>
           </div>
@@ -154,30 +165,30 @@
 
       <!-- Nav Links -->
       <nav class="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-        <p x-show="!$store.ui.sidebarCollapsed" class="px-3 mb-2 text-[0.6rem] font-semibold uppercase tracking-widest text-neutral-500">Overview</p>
+        <p x-show="!$store.ui.sidebarCollapsed" class="px-3 mb-2 text-[0.6rem] font-semibold uppercase tracking-widest text-neutral-500" x-text="t('overview')"></p>
         <a @click.prevent="$store.router.navigate('dashboard')" href="#/dashboard" :class="$store.router.page === 'dashboard' ? 'bg-white/10 text-white' : 'text-neutral-400 hover:text-white hover:bg-white/5'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors cursor-pointer">
           <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25a2.25 2.25 0 01-2.25-2.25v-2.25z"/></svg>
-          <span x-show="!$store.ui.sidebarCollapsed">Dashboard</span>
+          <span x-show="!$store.ui.sidebarCollapsed" x-text="t('dashboard')"></span>
         </a>
 
-        <p x-show="!$store.ui.sidebarCollapsed" class="px-3 mt-6 mb-2 text-[0.6rem] font-semibold uppercase tracking-widest text-neutral-500">Messaging</p>
+        <p x-show="!$store.ui.sidebarCollapsed" class="px-3 mt-6 mb-2 text-[0.6rem] font-semibold uppercase tracking-widest text-neutral-500" x-text="t('messaging')"></p>
         <a @click.prevent="$store.router.navigate('groups')" href="#/groups" :class="$store.router.page === 'groups' || $store.router.page === 'group-detail' || $store.router.page === 'instance-detail' ? 'bg-white/10 text-white' : 'text-neutral-400 hover:text-white hover:bg-white/5'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors cursor-pointer">
           <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>
-          <span x-show="!$store.ui.sidebarCollapsed">Grupos</span>
+          <span x-show="!$store.ui.sidebarCollapsed" x-text="t('groups')"></span>
         </a>
         <a @click.prevent="$store.router.navigate('broadcasts')" href="#/broadcasts" :class="$store.router.page === 'broadcasts' || $store.router.page === 'broadcast-detail' ? 'bg-white/10 text-white' : 'text-neutral-400 hover:text-white hover:bg-white/5'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors cursor-pointer">
           <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.34 15.84c-.688-.06-1.386-.09-2.09-.09H7.5a4.5 4.5 0 110-9h.75c.704 0 1.402-.03 2.09-.09m0 9.18c.253.962.584 1.892.985 2.783.247.55.06 1.21-.463 1.511l-.657.38c-.551.318-1.26.117-1.527-.461a20.845 20.845 0 01-1.44-4.282m3.102.069a18.03 18.03 0 01-.59-4.59c0-1.586.205-3.124.59-4.59m0 9.18a23.848 23.848 0 018.835 2.535M10.34 6.66a23.847 23.847 0 008.835-2.535m0 0A23.74 23.74 0 0018.795 3m.38 1.125a23.91 23.91 0 011.014 5.395m-1.014 8.855c-.118.38-.245.754-.38 1.125m.38-1.125a23.91 23.91 0 001.014-5.395m0-3.46c.495.413.811 1.035.811 1.73 0 .695-.316 1.317-.811 1.73m0-3.46a24.347 24.347 0 010 3.46"/></svg>
-          <span x-show="!$store.ui.sidebarCollapsed">Broadcasts</span>
+          <span x-show="!$store.ui.sidebarCollapsed" x-text="t('broadcasts')"></span>
         </a>
 
-        <p x-show="!$store.ui.sidebarCollapsed" class="px-3 mt-6 mb-2 text-[0.6rem] font-semibold uppercase tracking-widest text-neutral-500">Recursos</p>
+        <p x-show="!$store.ui.sidebarCollapsed" class="px-3 mt-6 mb-2 text-[0.6rem] font-semibold uppercase tracking-widest text-neutral-500" x-text="t('resources')"></p>
         <a @click.prevent="$store.router.navigate('logs')" href="#/logs" :class="$store.router.page === 'logs' ? 'bg-white/10 text-white' : 'text-neutral-400 hover:text-white hover:bg-white/5'" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors cursor-pointer">
           <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z"/></svg>
-          <span x-show="!$store.ui.sidebarCollapsed">Logs</span>
+          <span x-show="!$store.ui.sidebarCollapsed" x-text="t('logs')"></span>
         </a>
         <a href="/docs" target="_blank" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-neutral-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer">
           <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
-          <span x-show="!$store.ui.sidebarCollapsed">API Docs</span>
+          <span x-show="!$store.ui.sidebarCollapsed" x-text="t('api_docs')"></span>
         </a>
       </nav>
 
@@ -188,11 +199,11 @@
             <p class="text-xs font-medium truncate" x-text="$store.auth.tenant?.name || 'Tenant'"></p>
             <p class="text-[0.6rem] text-neutral-500 uppercase tracking-widest" x-text="$store.auth.tenant?.plan || 'free'"></p>
           </div>
-          <button @click="$store.auth.logout()" class="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-colors" title="Sair">
+          <button @click="$store.auth.logout()" class="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-colors" :title="t('logout')">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
           </button>
         </div>
-        <button x-show="$store.ui.sidebarCollapsed" @click="$store.auth.logout()" class="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-colors w-full flex justify-center" title="Sair">
+        <button x-show="$store.ui.sidebarCollapsed" @click="$store.auth.logout()" class="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-colors w-full flex justify-center" :title="t('logout')">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>
         </button>
       </div>
@@ -204,16 +215,23 @@
     <!-- MAIN CONTENT -->
     <main class="flex-1 min-w-0">
       <!-- Top Bar -->
-      <header class="sticky top-0 z-30 bg-[#E6E6E6]/95 backdrop-blur-sm border-b border-neutral-300 px-4 lg:px-8 py-3 flex items-center justify-between">
+      <header class="sticky top-0 z-30 bg-[#E6E6E6]/95 dark:bg-[#1a1a1a]/95 backdrop-blur-sm border-b border-neutral-300 dark:border-neutral-700 px-4 lg:px-8 py-3 flex items-center justify-between">
         <div class="flex items-center gap-4">
-          <button @click="$store.ui.toggleSidebar()" class="p-2 rounded-xl hover:bg-neutral-300 transition-colors">
+          <button @click="$store.ui.toggleSidebar()" class="p-2 rounded-xl hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
           </button>
           <h2 class="text-lg font-oswald font-medium tracking-tight capitalize" x-text="$store.router.page.replace('-', ' ')"></h2>
         </div>
         <div class="flex items-center gap-3">
-          <span class="text-xs text-neutral-500 uppercase tracking-widest hidden sm:block" x-text="$store.auth.tenant?.name"></span>
-          <div class="w-8 h-8 rounded-full bg-neutral-950 text-white flex items-center justify-center text-xs font-semibold" x-text="($store.auth.tenant?.name || 'U')[0].toUpperCase()"></div>
+          <!-- Language Toggle -->
+          <button @click="$store.lang.toggle()" class="px-3 py-1.5 rounded-full border border-neutral-300 dark:border-neutral-600 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors" x-text="$store.lang.current === 'pt' ? 'EN' : 'PT'" :title="t('language')"></button>
+          <!-- Dark Mode Toggle -->
+          <button @click="$store.theme.toggle()" class="p-2 rounded-xl border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors" :title="$store.theme.dark ? t('light_mode') : t('dark_mode')">
+            <svg x-show="!$store.theme.dark" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/></svg>
+            <svg x-show="$store.theme.dark" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/></svg>
+          </button>
+          <span class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-widest hidden sm:block" x-text="$store.auth.tenant?.name"></span>
+          <div class="w-8 h-8 rounded-full bg-neutral-950 dark:bg-neutral-700 text-white flex items-center justify-center text-xs font-semibold" x-text="($store.auth.tenant?.name || 'U')[0].toUpperCase()"></div>
         </div>
       </header>
 
@@ -224,22 +242,22 @@
         <div x-show="$store.router.page === 'dashboard'" x-data="dashboardPage()" x-effect="if($store.router.page === 'dashboard' && $store.auth.authenticated) load()">
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <template x-for="card in cards" :key="card.label">
-              <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5 card-hover">
+              <div class="bg-neutral-200/50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-300 dark:border-neutral-700 p-5 card-hover">
                 <div class="flex items-center justify-between mb-3">
-                  <span class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500" x-text="card.label"></span>
-                  <div class="w-8 h-8 rounded-lg bg-neutral-300/50 flex items-center justify-center" x-html="card.icon"></div>
+                  <span class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400" x-text="card.label"></span>
+                  <div class="w-8 h-8 rounded-lg bg-neutral-300/50 dark:bg-neutral-700/50 flex items-center justify-center" x-html="card.icon"></div>
                 </div>
                 <p class="text-3xl font-oswald font-medium tracking-tight" x-text="card.value"></p>
-                <p class="text-xs text-neutral-500 mt-1" x-text="card.sub"></p>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1" x-text="card.sub"></p>
               </div>
             </template>
           </div>
           <!-- Quick Actions -->
-          <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-6">
-            <h3 class="text-sm font-semibold uppercase tracking-widest text-neutral-800 mb-4">Acoes Rapidas</h3>
+          <div class="bg-neutral-200/50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-300 dark:border-neutral-700 p-6">
+            <h3 class="text-sm font-semibold uppercase tracking-widest text-neutral-800 dark:text-neutral-200 mb-4" x-text="t('quick_actions')"></h3>
             <div class="flex flex-wrap gap-3">
-              <button @click="$store.router.navigate('groups')" class="px-5 py-2 rounded-full border border-neutral-400 text-[0.7rem] font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors">Ver Grupos</button>
-              <button @click="$store.router.navigate('broadcasts')" class="px-5 py-2 rounded-full border border-neutral-400 text-[0.7rem] font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors">Broadcasts</button>
+              <button @click="$store.router.navigate('groups')" class="px-5 py-2 rounded-full border border-neutral-400 dark:border-neutral-600 text-[0.7rem] font-semibold uppercase tracking-widest hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors" x-text="t('view_groups')"></button>
+              <button @click="$store.router.navigate('broadcasts')" class="px-5 py-2 rounded-full border border-neutral-400 dark:border-neutral-600 text-[0.7rem] font-semibold uppercase tracking-widest hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors" x-text="t('broadcasts')"></button>
             </div>
           </div>
         </div>
@@ -249,13 +267,13 @@
           <!-- Header -->
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div class="flex items-center gap-3">
-              <input type="text" x-model="search" @input="filterGroups()" placeholder="Buscar grupos..." class="px-4 py-2 rounded-xl bg-neutral-200/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500 w-64"/>
+              <input type="text" x-model="search" @input="filterGroups()" :placeholder="t('search_groups')" class="px-4 py-2 rounded-xl bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-700 text-sm focus:outline-none focus:border-neutral-500 w-64 dark:text-neutral-100 dark:placeholder-neutral-500"/>
             </div>
             <button @click="showCreate = true; resetForm()" class="group transition-all duration-300 overflow-hidden font-medium text-neutral-200 bg-gradient-to-r from-neutral-700 to-neutral-800 rounded-full py-2.5 px-6 relative btn-press" style="box-shadow: 0 15px 33px -12px rgba(38,38,38,0.7), inset 0 4px 6.3px rgba(82,82,82,0.5), inset 0 -5px 6.3px rgba(23,23,23,0.8)">
               <div class="group-hover:translate-y-0 transition-transform duration-300 bg-white/10 absolute inset-0 translate-y-full"></div>
               <span class="relative flex items-center gap-2 text-xs font-semibold tracking-widest uppercase">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                Novo Grupo
+                <span x-text="t('new_group')"></span>
               </span>
             </button>
           </div>
@@ -263,24 +281,24 @@
           <!-- Groups Grid -->
           <div x-show="!loading && filtered.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             <template x-for="group in filtered" :key="group.id">
-              <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5 card-hover cursor-pointer" @click="$store.router.navigate('group-detail', { groupId: group.id })">
+              <div class="bg-neutral-200/50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-300 dark:border-neutral-700 p-5 card-hover cursor-pointer" @click="$store.router.navigate('group-detail', { groupId: group.id })">
                 <div class="flex items-start justify-between mb-3">
                   <div class="min-w-0">
                     <h3 class="text-sm font-semibold truncate" x-text="group.name"></h3>
-                    <p class="text-xs text-neutral-500 mt-0.5" x-text="formatDate(group.created_at)"></p>
+                    <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5" x-text="formatDate(group.created_at)"></p>
                   </div>
                   <div class="flex items-center gap-2 shrink-0">
                     <span :class="[getStrategyColor(group.strategy).bg, getStrategyColor(group.strategy).text]" class="px-2.5 py-1 rounded-full text-[0.6rem] font-semibold uppercase tracking-widest" x-text="getStrategyLabel(group.strategy)"></span>
                   </div>
                 </div>
-                <div class="flex items-center gap-4 text-xs text-neutral-600">
+                <div class="flex items-center gap-4 text-xs text-neutral-600 dark:text-neutral-400">
                   <span class="flex items-center gap-1">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"/></svg>
-                    <span x-text="(group._instanceCount || 0) + ' instancias'"></span>
+                    <span x-text="(group._instanceCount || 0) + ' ' + t('instances')"></span>
                   </span>
                   <span class="flex items-center gap-1">
                     <div class="w-2 h-2 rounded-full" :class="group.is_active ? 'bg-emerald-500' : 'bg-neutral-400'"></div>
-                    <span x-text="group.is_active ? 'Ativo' : 'Inativo'"></span>
+                    <span x-text="group.is_active ? t('active') : t('inactive')"></span>
                   </span>
                 </div>
               </div>
@@ -289,15 +307,15 @@
 
           <!-- Empty State -->
           <div x-show="!loading && filtered.length === 0" class="text-center py-16">
-            <svg class="w-16 h-16 text-neutral-300 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>
-            <p class="text-sm text-neutral-500 uppercase tracking-widest">Nenhum grupo encontrado</p>
-            <p class="text-xs text-neutral-400 mt-1">Crie seu primeiro grupo para comecar</p>
+            <svg class="w-16 h-16 text-neutral-300 dark:text-neutral-600 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>
+            <p class="text-sm text-neutral-500 dark:text-neutral-400 uppercase tracking-widest" x-text="t('no_groups')"></p>
+            <p class="text-xs text-neutral-400 dark:text-neutral-500 mt-1" x-text="t('create_first_group')"></p>
           </div>
 
           <!-- Loading -->
           <div x-show="loading" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             <template x-for="i in 3">
-              <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
+              <div class="bg-neutral-200/50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-300 dark:border-neutral-700 p-5">
                 <div class="skeleton h-4 w-32 mb-3"></div>
                 <div class="skeleton h-3 w-24 mb-4"></div>
                 <div class="skeleton h-3 w-40"></div>
@@ -307,29 +325,29 @@
 
           <!-- Create/Edit Modal -->
           <div x-show="showCreate" x-transition.opacity class="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="showCreate = false">
-            <div class="bg-[#E6E6E6] rounded-2xl p-6 shadow-2xl max-w-lg w-full mx-4 animate-scale-in border border-neutral-300" @click.stop>
-              <h3 class="text-lg font-oswald font-medium tracking-tight mb-6" x-text="editId ? 'Editar Grupo' : 'Novo Grupo'"></h3>
+            <div class="bg-[#E6E6E6] dark:bg-neutral-900 rounded-2xl p-6 shadow-2xl max-w-lg w-full mx-4 animate-scale-in border border-neutral-300 dark:border-neutral-700" @click.stop>
+              <h3 class="text-lg font-oswald font-medium tracking-tight mb-6" x-text="editId ? t('edit_group') : t('new_group')"></h3>
               <form @submit.prevent="saveGroup()" class="space-y-4">
                 <div>
-                  <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Nome</label>
-                  <input type="text" x-model="form.name" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500" required/>
+                  <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2" x-text="t('name')"></label>
+                  <input type="text" x-model="form.name" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-600 text-sm focus:outline-none focus:border-neutral-500 dark:text-neutral-100" required/>
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Estrategia</label>
-                  <select x-model="form.strategy" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500">
-                    <option value="failover">Failover - Usa instancia backup em caso de falha</option>
-                    <option value="rotation">Rotation - Distribui entre instancias</option>
-                    <option value="hybrid">Hybrid - Combinacao de failover e rotation</option>
+                  <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2" x-text="t('strategy')"></label>
+                  <select x-model="form.strategy" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-600 text-sm focus:outline-none focus:border-neutral-500 dark:text-neutral-100">
+                    <option value="failover" x-text="t('failover_desc')"></option>
+                    <option value="rotation" x-text="t('rotation_desc')"></option>
+                    <option value="hybrid" x-text="t('hybrid_desc')"></option>
                   </select>
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Webhook URL (opcional)</label>
-                  <input type="url" x-model="form.webhook_url" placeholder="https://..." class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                  <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2" x-text="t('webhook_url_optional')"></label>
+                  <input type="url" x-model="form.webhook_url" placeholder="https://..." class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-600 text-sm focus:outline-none focus:border-neutral-500 dark:text-neutral-100 dark:placeholder-neutral-500"/>
                 </div>
                 <div class="flex gap-3 justify-end pt-2">
-                  <button type="button" @click="showCreate = false" class="px-5 py-2 rounded-full border border-neutral-400 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors">Cancelar</button>
-                  <button type="submit" :disabled="saving" class="px-5 py-2 rounded-full bg-neutral-950 text-white text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800 transition-colors">
-                    <span x-text="saving ? 'Salvando...' : 'Salvar'"></span>
+                  <button type="button" @click="showCreate = false" class="px-5 py-2 rounded-full border border-neutral-400 dark:border-neutral-600 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors" x-text="t('cancel')"></button>
+                  <button type="submit" :disabled="saving" class="px-5 py-2 rounded-full bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800 dark:hover:bg-neutral-300 transition-colors">
+                    <span x-text="saving ? t('saving') : t('save')"></span>
                   </button>
                 </div>
               </form>
@@ -341,71 +359,71 @@
         <div x-show="$store.router.page === 'group-detail'" x-data="groupDetailPage()" x-effect="if($store.router.page === 'group-detail') load($store.router.params.groupId)">
           <!-- Back + Title -->
           <div class="flex items-center gap-4 mb-6">
-            <button @click="$store.router.navigate('groups')" class="p-2 rounded-xl hover:bg-neutral-300 transition-colors">
+            <button @click="$store.router.navigate('groups')" class="p-2 rounded-xl hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
             </button>
             <div class="min-w-0 flex-1">
-              <h2 class="text-2xl font-oswald font-medium tracking-tight" x-text="group?.name || 'Carregando...'"></h2>
+              <h2 class="text-2xl font-oswald font-medium tracking-tight" x-text="group?.name || t('loading')"></h2>
               <div class="flex items-center gap-3 mt-1">
                 <span :class="[getStrategyColor(group?.strategy).bg, getStrategyColor(group?.strategy).text]" class="px-2.5 py-0.5 rounded-full text-[0.6rem] font-semibold uppercase tracking-widest" x-text="getStrategyLabel(group?.strategy)" x-show="group"></span>
-                <span class="flex items-center gap-1 text-xs text-neutral-500">
+                <span class="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400">
                   <div class="w-2 h-2 rounded-full" :class="group?.is_active ? 'bg-emerald-500' : 'bg-neutral-400'"></div>
-                  <span x-text="group?.is_active ? 'Ativo' : 'Inativo'"></span>
+                  <span x-text="group?.is_active ? t('active') : t('inactive')"></span>
                 </span>
               </div>
             </div>
             <div class="flex gap-2">
-              <button x-show="group?.is_active" @click="doPause()" class="px-4 py-2 rounded-full border border-yellow-400 text-yellow-700 text-[0.7rem] font-semibold uppercase tracking-widest hover:bg-yellow-50 transition-colors">Pausar</button>
-              <button x-show="group && !group.is_active" @click="doResume()" class="px-4 py-2 rounded-full border border-emerald-400 text-emerald-700 text-[0.7rem] font-semibold uppercase tracking-widest hover:bg-emerald-50 transition-colors">Retomar</button>
-              <button @click="$store.ui.confirm('Tem certeza que deseja excluir este grupo?', () => doDelete())" class="px-4 py-2 rounded-full border border-red-300 text-red-600 text-[0.7rem] font-semibold uppercase tracking-widest hover:bg-red-50 transition-colors">Excluir</button>
+              <button x-show="group?.is_active" @click="doPause()" class="px-4 py-2 rounded-full border border-yellow-400 text-yellow-700 dark:text-yellow-400 text-[0.7rem] font-semibold uppercase tracking-widest hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-colors" x-text="t('pause')"></button>
+              <button x-show="group && !group.is_active" @click="doResume()" class="px-4 py-2 rounded-full border border-emerald-400 text-emerald-700 dark:text-emerald-400 text-[0.7rem] font-semibold uppercase tracking-widest hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors" x-text="t('resume')"></button>
+              <button @click="$store.ui.confirm(t('confirm_delete_group'), () => doDelete())" class="px-4 py-2 rounded-full border border-red-300 text-red-600 dark:text-red-400 text-[0.7rem] font-semibold uppercase tracking-widest hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" x-text="t('delete')"></button>
             </div>
           </div>
 
           <!-- Tabs -->
-          <div class="flex gap-1 mb-6 overflow-x-auto border-b border-neutral-300">
-            <template x-for="t in ['instancias', 'metricas', 'webhook', 'blacklist']" :key="t">
-              <button @click="tab = t" :class="tab === t ? 'border-b-2 border-neutral-950 text-neutral-950' : 'text-neutral-500 hover:text-neutral-700'" class="px-4 py-3 text-xs font-semibold uppercase tracking-widest whitespace-nowrap transition-colors" x-text="t"></button>
+          <div class="flex gap-1 mb-6 overflow-x-auto border-b border-neutral-300 dark:border-neutral-700">
+            <template x-for="tabKey in ['tab_instances', 'tab_metrics', 'tab_webhook', 'tab_blacklist']" :key="tabKey">
+              <button @click="tab = tabKey" :class="tab === tabKey ? 'border-b-2 border-neutral-950 dark:border-neutral-100 text-neutral-950 dark:text-neutral-100' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300'" class="px-4 py-3 text-xs font-semibold uppercase tracking-widest whitespace-nowrap transition-colors" x-text="t(tabKey)"></button>
             </template>
           </div>
 
           <!-- Instances Tab -->
-          <div x-show="tab === 'instancias'">
+          <div x-show="tab === 'tab_instances'">
             <div class="flex justify-between items-center mb-4">
-              <p class="text-xs text-neutral-500 uppercase tracking-widest" x-text="instances.length + ' instancias'"></p>
-              <button @click="showAddInstance = true; resetInstanceForm()" class="px-4 py-2 rounded-full bg-neutral-950 text-white text-[0.7rem] font-semibold uppercase tracking-widest hover:bg-neutral-800 transition-colors">
+              <p class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-widest" x-text="instances.length + ' ' + t('instances')"></p>
+              <button @click="showAddInstance = true; resetInstanceForm()" class="px-4 py-2 rounded-full bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 text-[0.7rem] font-semibold uppercase tracking-widest hover:bg-neutral-800 dark:hover:bg-neutral-300 transition-colors">
                 <span class="flex items-center gap-2">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
-                  Adicionar
+                  <span x-text="t('add')"></span>
                 </span>
               </button>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               <template x-for="inst in instances" :key="inst.id">
-                <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5 card-hover">
+                <div class="bg-neutral-200/50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-300 dark:border-neutral-700 p-5 card-hover">
                   <div class="flex items-start justify-between mb-3">
                     <div class="min-w-0">
-                      <h4 class="text-sm font-semibold truncate" x-text="inst.display_name || 'Instancia'"></h4>
-                      <p class="text-xs text-neutral-500 mt-0.5" x-text="formatPhone(inst.phone_number)"></p>
+                      <h4 class="text-sm font-semibold truncate" x-text="inst.display_name || t('instance_label')"></h4>
+                      <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5" x-text="formatPhone(inst.phone_number)"></p>
                     </div>
                     <span :class="[getStatusColor(inst.status).bg, getStatusColor(inst.status).text]" class="px-2.5 py-1 rounded-full text-[0.6rem] font-semibold uppercase tracking-widest flex items-center gap-1.5 shrink-0">
                       <div class="w-1.5 h-1.5 rounded-full" :class="getStatusColor(inst.status).dot"></div>
                       <span x-text="getStatusLabel(inst.status)"></span>
                     </span>
                   </div>
-                  <div class="grid grid-cols-2 gap-2 text-xs text-neutral-600 mb-4">
-                    <div><span class="text-neutral-400">Msgs Hoje:</span> <span x-text="inst.messages_today || 0"></span>/<span x-text="inst.daily_budget || 0"></span></div>
-                    <div><span class="text-neutral-400">Entrega:</span> <span x-text="formatPercent(inst.delivery_rate)"></span></div>
-                    <div><span class="text-neutral-400">Prioridade:</span> <span x-text="inst.priority || 0"></span></div>
-                    <div><span class="text-neutral-400">Budget/h:</span> <span x-text="inst.hourly_budget || 0"></span></div>
+                  <div class="grid grid-cols-2 gap-2 text-xs text-neutral-600 dark:text-neutral-400 mb-4">
+                    <div><span class="text-neutral-400 dark:text-neutral-500" x-text="t('msgs_today') + ':'"></span> <span x-text="inst.messages_today || 0"></span>/<span x-text="inst.daily_budget || 0"></span></div>
+                    <div><span class="text-neutral-400 dark:text-neutral-500" x-text="t('delivery') + ':'"></span> <span x-text="formatPercent(inst.delivery_rate)"></span></div>
+                    <div><span class="text-neutral-400 dark:text-neutral-500" x-text="t('priority') + ':'"></span> <span x-text="inst.priority || 0"></span></div>
+                    <div><span class="text-neutral-400 dark:text-neutral-500" x-text="t('budget_hour') + ':'"></span> <span x-text="inst.hourly_budget || 0"></span></div>
                   </div>
                   <div class="flex gap-2">
-                    <button @click="$store.router.navigate('instance-detail', { groupId: $store.router.params.groupId, instanceId: inst.id })" class="flex-1 px-3 py-1.5 rounded-lg border border-neutral-300 text-[0.65rem] font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors text-center">Detalhes</button>
+                    <button @click="$store.router.navigate('instance-detail', { groupId: $store.router.params.groupId, instanceId: inst.id })" class="flex-1 px-3 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-600 text-[0.65rem] font-semibold uppercase tracking-widest hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors text-center" x-text="t('details')"></button>
                     <template x-if="inst.status === 'disconnected'">
-                      <button @click="connectInst(inst.id)" class="flex-1 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[0.65rem] font-semibold uppercase tracking-widest hover:bg-emerald-700 transition-colors text-center">Conectar</button>
+                      <button @click="connectInst(inst.id)" class="flex-1 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[0.65rem] font-semibold uppercase tracking-widest hover:bg-emerald-700 transition-colors text-center" x-text="t('connect_btn')"></button>
                     </template>
                     <template x-if="inst.status === 'available'">
-                      <button @click="disconnectInst(inst.id)" class="flex-1 px-3 py-1.5 rounded-lg bg-neutral-600 text-white text-[0.65rem] font-semibold uppercase tracking-widest hover:bg-neutral-700 transition-colors text-center">Desconectar</button>
+                      <button @click="disconnectInst(inst.id)" class="flex-1 px-3 py-1.5 rounded-lg bg-neutral-600 text-white text-[0.65rem] font-semibold uppercase tracking-widest hover:bg-neutral-700 transition-colors text-center" x-text="t('disconnect')"></button>
                     </template>
                   </div>
                 </div>
@@ -414,32 +432,32 @@
 
             <!-- Empty instances -->
             <div x-show="instances.length === 0 && !loading" class="text-center py-12">
-              <svg class="w-12 h-12 text-neutral-300 mx-auto mb-3" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"/></svg>
-              <p class="text-sm text-neutral-500 uppercase tracking-widest">Nenhuma instancia</p>
-              <p class="text-xs text-neutral-400 mt-1">Adicione uma instancia para comecar</p>
+              <svg class="w-12 h-12 text-neutral-300 dark:text-neutral-600 mx-auto mb-3" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"/></svg>
+              <p class="text-sm text-neutral-500 dark:text-neutral-400 uppercase tracking-widest" x-text="t('no_instances')"></p>
+              <p class="text-xs text-neutral-400 dark:text-neutral-500 mt-1" x-text="t('add_instance_hint')"></p>
             </div>
 
             <!-- Add Instance Modal -->
             <div x-show="showAddInstance" x-transition.opacity class="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="showAddInstance = false">
-              <div class="bg-[#E6E6E6] rounded-2xl p-6 shadow-2xl max-w-lg w-full mx-4 animate-scale-in border border-neutral-300" @click.stop>
-                <h3 class="text-lg font-oswald font-medium tracking-tight mb-1">Nova Instancia</h3>
-                <p class="text-xs text-neutral-500 mb-5">
-                  <span x-show="group?.strategy === 'failover'">Estrategia <strong class="text-blue-600">Failover</strong> — a prioridade define qual instancia e a principal. Se falhar, a proxima assume.</span>
-                  <span x-show="group?.strategy === 'rotation'">Estrategia <strong class="text-purple-600">Rotacao</strong> — as mensagens sao distribuidas entre instancias respeitando o budget de cada uma.</span>
-                  <span x-show="group?.strategy === 'hybrid'">Estrategia <strong class="text-orange-600">Hibrido</strong> — rotacao com failover automatico. Defina prioridade e budget.</span>
+              <div class="bg-[#E6E6E6] dark:bg-neutral-900 rounded-2xl p-6 shadow-2xl max-w-lg w-full mx-4 animate-scale-in border border-neutral-300 dark:border-neutral-700" @click.stop>
+                <h3 class="text-lg font-oswald font-medium tracking-tight mb-1" x-text="t('new_instance')"></h3>
+                <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-5">
+                  <span x-show="group?.strategy === 'failover'" x-html="'<strong class=\'text-blue-600 dark:text-blue-400\'>' + t('failover') + '</strong> — ' + t('failover_strategy_desc').split('—')[1]"></span>
+                  <span x-show="group?.strategy === 'rotation'" x-html="'<strong class=\'text-purple-600 dark:text-purple-400\'>' + t('rotation') + '</strong> — ' + t('rotation_strategy_desc').split('—')[1]"></span>
+                  <span x-show="group?.strategy === 'hybrid'" x-html="'<strong class=\'text-orange-600 dark:text-orange-400\'>' + t('hybrid') + '</strong> — ' + t('hybrid_strategy_desc').split('—')[1]"></span>
                 </p>
                 <form @submit.prevent="addInstance()" class="space-y-4">
                   <div>
-                    <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Nome</label>
-                    <input type="text" x-model="instForm.display_name" placeholder="Celular 01" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                    <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2" x-text="t('name')"></label>
+                    <input type="text" x-model="instForm.display_name" :placeholder="t('cell_placeholder')" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-600 text-sm focus:outline-none focus:border-neutral-500 dark:text-neutral-100 dark:placeholder-neutral-500"/>
                   </div>
 
                   <!-- Failover: prioridade e destaque -->
                   <template x-if="group?.strategy === 'failover'">
                     <div>
-                      <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Prioridade <span class="text-blue-500">(principal = 1)</span></label>
-                      <input type="number" x-model.number="instForm.priority" min="1" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
-                      <p class="text-[0.65rem] text-neutral-400 mt-1.5">Prioridade 1 = instancia principal. 2, 3... = backups em ordem.</p>
+                      <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2"><span x-text="t('priority')"></span> <span class="text-blue-500" x-text="'(' + t('priority_main') + ')'"></span></label>
+                      <input type="number" x-model.number="instForm.priority" min="1" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-600 text-sm focus:outline-none focus:border-neutral-500 dark:text-neutral-100"/>
+                      <p class="text-[0.65rem] text-neutral-400 dark:text-neutral-500 mt-1.5" x-text="t('priority_hint')"></p>
                     </div>
                   </template>
 
@@ -448,14 +466,14 @@
                     <div class="space-y-4">
                       <div class="grid grid-cols-2 gap-4">
                         <div>
-                          <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Budget/dia <span class="text-purple-500">*</span></label>
-                          <input type="number" x-model.number="instForm.daily_budget" min="1" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
-                          <p class="text-[0.65rem] text-neutral-400 mt-1.5">Max mensagens por dia nesta instancia.</p>
+                          <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2"><span x-text="t('budget_day')"></span> <span class="text-purple-500">*</span></label>
+                          <input type="number" x-model.number="instForm.daily_budget" min="1" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-600 text-sm focus:outline-none focus:border-neutral-500 dark:text-neutral-100"/>
+                          <p class="text-[0.65rem] text-neutral-400 dark:text-neutral-500 mt-1.5" x-text="t('max_msgs_day')"></p>
                         </div>
                         <div>
-                          <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Budget/hora <span class="text-purple-500">*</span></label>
-                          <input type="number" x-model.number="instForm.hourly_budget" min="1" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
-                          <p class="text-[0.65rem] text-neutral-400 mt-1.5">Max mensagens por hora nesta instancia.</p>
+                          <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2"><span x-text="t('budget_hour')"></span> <span class="text-purple-500">*</span></label>
+                          <input type="number" x-model.number="instForm.hourly_budget" min="1" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-600 text-sm focus:outline-none focus:border-neutral-500 dark:text-neutral-100"/>
+                          <p class="text-[0.65rem] text-neutral-400 dark:text-neutral-500 mt-1.5" x-text="t('max_msgs_hour')"></p>
                         </div>
                       </div>
                     </div>
@@ -465,26 +483,26 @@
                   <template x-if="group?.strategy === 'hybrid'">
                     <div class="space-y-4">
                       <div>
-                        <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Prioridade <span class="text-orange-500">(fallback order)</span></label>
-                        <input type="number" x-model.number="instForm.priority" min="1" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
-                        <p class="text-[0.65rem] text-neutral-400 mt-1.5">Ordem de failover quando uma instancia falha.</p>
+                        <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2"><span x-text="t('priority')"></span> <span class="text-orange-500" x-text="'(' + t('fallback_order') + ')'"></span></label>
+                        <input type="number" x-model.number="instForm.priority" min="1" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-600 text-sm focus:outline-none focus:border-neutral-500 dark:text-neutral-100"/>
+                        <p class="text-[0.65rem] text-neutral-400 dark:text-neutral-500 mt-1.5" x-text="t('failover_order')"></p>
                       </div>
                       <div class="grid grid-cols-2 gap-4">
                         <div>
-                          <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Budget/dia</label>
-                          <input type="number" x-model.number="instForm.daily_budget" min="1" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                          <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2" x-text="t('budget_day')"></label>
+                          <input type="number" x-model.number="instForm.daily_budget" min="1" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-600 text-sm focus:outline-none focus:border-neutral-500 dark:text-neutral-100"/>
                         </div>
                         <div>
-                          <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Budget/hora</label>
-                          <input type="number" x-model.number="instForm.hourly_budget" min="1" class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                          <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2" x-text="t('budget_hour')"></label>
+                          <input type="number" x-model.number="instForm.hourly_budget" min="1" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-600 text-sm focus:outline-none focus:border-neutral-500 dark:text-neutral-100"/>
                         </div>
                       </div>
                     </div>
                   </template>
 
                   <div class="flex gap-3 justify-end pt-2">
-                    <button type="button" @click="showAddInstance = false" class="px-5 py-2 rounded-full border border-neutral-400 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors">Cancelar</button>
-                    <button type="submit" class="px-5 py-2 rounded-full bg-neutral-950 text-white text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800 transition-colors">Criar</button>
+                    <button type="button" @click="showAddInstance = false" class="px-5 py-2 rounded-full border border-neutral-400 dark:border-neutral-600 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors" x-text="t('cancel')"></button>
+                    <button type="submit" class="px-5 py-2 rounded-full bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800 dark:hover:bg-neutral-300 transition-colors" x-text="t('create')"></button>
                   </div>
                 </form>
               </div>
@@ -492,83 +510,83 @@
           </div>
 
           <!-- Metrics Tab -->
-          <div x-show="tab === 'metricas'">
+          <div x-show="tab === 'tab_metrics'">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
-                <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Enviadas</p>
+              <div class="bg-neutral-200/50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-300 dark:border-neutral-700 p-5">
+                <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1" x-text="t('sent')"></p>
                 <p class="text-2xl font-oswald font-medium" x-text="formatNumber(metrics?.sent || 0)"></p>
               </div>
-              <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
-                <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Entregues</p>
+              <div class="bg-neutral-200/50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-300 dark:border-neutral-700 p-5">
+                <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1" x-text="t('delivered')"></p>
                 <p class="text-2xl font-oswald font-medium" x-text="formatNumber(metrics?.delivered || 0)"></p>
               </div>
-              <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
-                <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Falharam</p>
-                <p class="text-2xl font-oswald font-medium text-red-600" x-text="formatNumber(metrics?.failed || 0)"></p>
+              <div class="bg-neutral-200/50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-300 dark:border-neutral-700 p-5">
+                <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1" x-text="t('failed')"></p>
+                <p class="text-2xl font-oswald font-medium text-red-600 dark:text-red-400" x-text="formatNumber(metrics?.failed || 0)"></p>
               </div>
-              <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
-                <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Taxa Entrega</p>
+              <div class="bg-neutral-200/50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-300 dark:border-neutral-700 p-5">
+                <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1" x-text="t('delivery_rate')"></p>
                 <p class="text-2xl font-oswald font-medium" x-text="formatPercent(metrics?.delivery_rate || 0)"></p>
               </div>
             </div>
           </div>
 
           <!-- Webhook Tab -->
-          <div x-show="tab === 'webhook'" x-data="{ webhookForm: { url: '', events: [] }, whLoading: false, whLoaded: false }" x-effect="
-            if(tab === 'webhook' && $store.router.params.groupId && !whLoaded) { whLoaded = true; Api.getWebhook($store.router.params.groupId).then(r => { if(r?.data) { webhookForm.url = r.data.webhook_url || ''; webhookForm.events = r.data.webhook_events || [] }}).catch(() => {}) }
+          <div x-show="tab === 'tab_webhook'" x-data="{ webhookForm: { url: '', events: [] }, whLoading: false, whLoaded: false }" x-effect="
+            if(tab === 'tab_webhook' && $store.router.params.groupId && !whLoaded) { whLoaded = true; Api.getWebhook($store.router.params.groupId).then(r => { if(r?.data) { webhookForm.url = r.data.webhook_url || ''; webhookForm.events = r.data.webhook_events || [] }}).catch(() => {}) }
           ">
-            <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-6 max-w-xl">
-              <h3 class="text-sm font-semibold uppercase tracking-widest text-neutral-800 mb-4">Configuracao de Webhook</h3>
+            <div class="bg-neutral-200/50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-300 dark:border-neutral-700 p-6 max-w-xl">
+              <h3 class="text-sm font-semibold uppercase tracking-widest text-neutral-800 dark:text-neutral-200 mb-4" x-text="t('webhook_config')"></h3>
               <form @submit.prevent="
                 whLoading = true;
                 Api.configureWebhook($store.router.params.groupId, webhookForm)
-                  .then(() => $store.toast.show('success', 'Webhook configurado'))
+                  .then(() => $store.toast.show('success', t('webhook_configured')))
                   .catch(e => $store.toast.show('error', e.message))
                   .finally(() => whLoading = false)
               " class="space-y-4">
                 <div>
-                  <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">URL</label>
-                  <input type="url" x-model="webhookForm.url" placeholder="https://..." class="w-full px-4 py-3 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                  <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2">URL</label>
+                  <input type="url" x-model="webhookForm.url" placeholder="https://..." class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-600 text-sm focus:outline-none focus:border-neutral-500 dark:text-neutral-100 dark:placeholder-neutral-500"/>
                 </div>
                 <div class="flex gap-3 items-center">
-                  <button type="submit" :disabled="whLoading" class="px-5 py-2 rounded-full bg-neutral-950 text-white text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800 transition-colors">Salvar</button>
+                  <button type="submit" :disabled="whLoading" class="px-5 py-2 rounded-full bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800 dark:hover:bg-neutral-300 transition-colors" x-text="t('save')"></button>
                   <button type="button" @click="
                     Api.testWebhook($store.router.params.groupId)
-                      .then(() => $store.toast.show('success', 'Webhook de teste enviado'))
+                      .then(() => $store.toast.show('success', t('webhook_test_sent')))
                       .catch(e => $store.toast.show('error', e.message))
-                  " class="px-5 py-2 rounded-full border border-neutral-400 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors">Testar</button>
+                  " class="px-5 py-2 rounded-full border border-neutral-400 dark:border-neutral-600 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors" x-text="t('test')"></button>
                 </div>
               </form>
             </div>
           </div>
 
           <!-- Blacklist Tab -->
-          <div x-show="tab === 'blacklist'" x-data="{ blNumbers: '', blItems: [], blLoading: false, blLoaded: false }" x-effect="
-            if(tab === 'blacklist' && $store.router.params.groupId && !blLoaded) { blLoaded = true; Api.listBlacklist($store.router.params.groupId).then(r => blItems = r?.data || []).catch(() => {}) }
+          <div x-show="tab === 'tab_blacklist'" x-data="{ blNumbers: '', blItems: [], blLoading: false, blLoaded: false }" x-effect="
+            if(tab === 'tab_blacklist' && $store.router.params.groupId && !blLoaded) { blLoaded = true; Api.listBlacklist($store.router.params.groupId).then(r => blItems = r?.data || []).catch(() => {}) }
           ">
-            <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-6 max-w-xl mb-4">
-              <h3 class="text-sm font-semibold uppercase tracking-widest text-neutral-800 mb-4">Adicionar Numeros</h3>
+            <div class="bg-neutral-200/50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-300 dark:border-neutral-700 p-6 max-w-xl mb-4">
+              <h3 class="text-sm font-semibold uppercase tracking-widest text-neutral-800 dark:text-neutral-200 mb-4" x-text="t('add_numbers')"></h3>
               <div class="flex gap-3">
-                <input type="text" x-model="blNumbers" placeholder="5511999999999, 5511888888888" class="flex-1 px-4 py-2 rounded-xl bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
+                <input type="text" x-model="blNumbers" placeholder="5511999999999, 5511888888888" class="flex-1 px-4 py-2 rounded-xl bg-white/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-600 text-sm focus:outline-none focus:border-neutral-500 dark:text-neutral-100 dark:placeholder-neutral-500"/>
                 <button @click="
                   const nums = blNumbers.split(',').map(n => n.trim()).filter(Boolean);
                   if(nums.length) {
                     Api.addToBlacklist($store.router.params.groupId, nums, 'manual')
-                      .then(() => { $store.toast.show('success', 'Numeros adicionados'); blNumbers = ''; Api.listBlacklist($store.router.params.groupId).then(r => blItems = r?.data || []) })
+                      .then(() => { $store.toast.show('success', t('numbers_added')); blNumbers = ''; Api.listBlacklist($store.router.params.groupId).then(r => blItems = r?.data || []) })
                       .catch(e => $store.toast.show('error', e.message))
                   }
-                " class="px-4 py-2 rounded-full bg-neutral-950 text-white text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800">Adicionar</button>
+                " class="px-4 py-2 rounded-full bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800 dark:hover:bg-neutral-300" x-text="t('add')"></button>
               </div>
             </div>
             <div class="space-y-2">
               <template x-for="item in blItems" :key="item.number || item">
-                <div class="flex items-center justify-between bg-neutral-200/50 rounded-xl border border-neutral-300 px-4 py-3">
+                <div class="flex items-center justify-between bg-neutral-200/50 dark:bg-neutral-800/50 rounded-xl border border-neutral-300 dark:border-neutral-700 px-4 py-3">
                   <span class="text-sm font-mono" x-text="item.number || item"></span>
                   <button @click="
                     Api.removeFromBlacklist($store.router.params.groupId, item.number || item)
-                      .then(() => { blItems = blItems.filter(b => (b.number || b) !== (item.number || item)); $store.toast.show('success', 'Removido') })
+                      .then(() => { blItems = blItems.filter(b => (b.number || b) !== (item.number || item)); $store.toast.show('success', t('removed')) })
                       .catch(e => $store.toast.show('error', e.message))
-                  " class="text-red-500 hover:text-red-700 p-1">
+                  " class="text-red-500 hover:text-red-700 dark:hover:text-red-400 p-1">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                   </button>
                 </div>
@@ -581,12 +599,12 @@
         <div x-show="$store.router.page === 'instance-detail'" x-data="instanceDetailPage()" x-effect="if($store.router.page === 'instance-detail') load($store.router.params.instanceId)">
           <!-- Back + Title -->
           <div class="flex items-center gap-4 mb-6">
-            <button @click="$store.router.navigate('group-detail', { groupId: $store.router.params.groupId })" class="p-2 rounded-xl hover:bg-neutral-300 transition-colors">
+            <button @click="$store.router.navigate('group-detail', { groupId: $store.router.params.groupId })" class="p-2 rounded-xl hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
             </button>
             <div class="min-w-0 flex-1">
-              <h2 class="text-2xl font-oswald font-medium tracking-tight" x-text="instance?.display_name || 'Instancia'"></h2>
-              <p class="text-xs text-neutral-500 mt-0.5" x-text="formatPhone(instance?.phone_number)"></p>
+              <h2 class="text-2xl font-oswald font-medium tracking-tight" x-text="instance?.display_name || t('instance_label')"></h2>
+              <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5" x-text="formatPhone(instance?.phone_number)"></p>
             </div>
             <span x-show="instance" :class="[getStatusColor(instance?.status).bg, getStatusColor(instance?.status).text]" class="px-3 py-1.5 rounded-full text-[0.7rem] font-semibold uppercase tracking-widest flex items-center gap-2">
               <div class="w-2 h-2 rounded-full status-dot-pulse" :class="getStatusColor(instance?.status).dot"></div>
@@ -596,20 +614,20 @@
 
           <!-- Info Cards -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
-              <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Msgs Hoje</p>
-              <p class="text-2xl font-oswald font-medium"><span x-text="instance?.messages_today || 0"></span> <span class="text-sm text-neutral-400">/ <span x-text="instance?.daily_budget || 0"></span></span></p>
+            <div class="bg-neutral-200/50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-300 dark:border-neutral-700 p-5">
+              <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1" x-text="t('msgs_today')"></p>
+              <p class="text-2xl font-oswald font-medium"><span x-text="instance?.messages_today || 0"></span> <span class="text-sm text-neutral-400 dark:text-neutral-500">/ <span x-text="instance?.daily_budget || 0"></span></span></p>
             </div>
-            <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
-              <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Taxa Entrega</p>
+            <div class="bg-neutral-200/50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-300 dark:border-neutral-700 p-5">
+              <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1" x-text="t('delivery_rate')"></p>
               <p class="text-2xl font-oswald font-medium" x-text="formatPercent(instance?.delivery_rate)"></p>
             </div>
-            <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
-              <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Prioridade</p>
+            <div class="bg-neutral-200/50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-300 dark:border-neutral-700 p-5">
+              <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1" x-text="t('priority')"></p>
               <p class="text-2xl font-oswald font-medium" x-text="instance?.priority || 0"></p>
             </div>
-            <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
-              <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Budget/hora</p>
+            <div class="bg-neutral-200/50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-300 dark:border-neutral-700 p-5">
+              <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1" x-text="t('budget_hour')"></p>
               <p class="text-2xl font-oswald font-medium" x-text="instance?.hourly_budget || 0"></p>
             </div>
           </div>
@@ -617,38 +635,38 @@
           <!-- Actions -->
           <div class="flex flex-wrap gap-3 mb-6">
             <template x-if="instance?.status === 'disconnected'">
-              <button @click="doConnect()" class="px-5 py-2 rounded-full bg-emerald-600 text-white text-xs font-semibold uppercase tracking-widest hover:bg-emerald-700 transition-colors btn-press">Conectar</button>
+              <button @click="doConnect()" class="px-5 py-2 rounded-full bg-emerald-600 text-white text-xs font-semibold uppercase tracking-widest hover:bg-emerald-700 transition-colors btn-press" x-text="t('connect_btn')"></button>
             </template>
             <template x-if="instance?.status === 'available'">
-              <button @click="doDisconnect()" class="px-5 py-2 rounded-full bg-neutral-600 text-white text-xs font-semibold uppercase tracking-widest hover:bg-neutral-700 transition-colors btn-press">Desconectar</button>
+              <button @click="doDisconnect()" class="px-5 py-2 rounded-full bg-neutral-600 text-white text-xs font-semibold uppercase tracking-widest hover:bg-neutral-700 transition-colors btn-press" x-text="t('disconnect')"></button>
             </template>
-            <button @click="doRestart()" class="px-5 py-2 rounded-full border border-neutral-400 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors btn-press">Reiniciar</button>
-            <button @click="showQR = true; loadQR()" class="px-5 py-2 rounded-full border border-neutral-400 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors btn-press">QR Code</button>
-            <button @click="$store.ui.confirm('Tem certeza que deseja excluir esta instancia?', () => doDeleteInstance())" class="px-5 py-2 rounded-full border border-red-300 text-red-600 text-xs font-semibold uppercase tracking-widest hover:bg-red-50 transition-colors btn-press">Excluir</button>
+            <button @click="doRestart()" class="px-5 py-2 rounded-full border border-neutral-400 dark:border-neutral-600 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors btn-press" x-text="t('restart')"></button>
+            <button @click="showQR = true; loadQR()" class="px-5 py-2 rounded-full border border-neutral-400 dark:border-neutral-600 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors btn-press" x-text="t('qr_code')"></button>
+            <button @click="$store.ui.confirm(t('confirm_delete_instance'), () => doDeleteInstance())" class="px-5 py-2 rounded-full border border-red-300 text-red-600 dark:text-red-400 text-xs font-semibold uppercase tracking-widest hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors btn-press" x-text="t('delete')"></button>
           </div>
 
           <!-- QR Code Modal -->
           <div x-show="showQR" x-transition.opacity class="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 backdrop-blur-sm" @click.self="showQR = false; stopQRPolling()">
-            <div class="bg-[#E6E6E6] rounded-2xl p-8 shadow-2xl max-w-sm w-full mx-4 animate-scale-in border border-neutral-300 text-center" @click.stop>
-              <h3 class="text-lg font-oswald font-medium tracking-tight mb-2">Escanear QR Code</h3>
-              <p class="text-xs text-neutral-500 uppercase tracking-widest mb-6">Abra o WhatsApp e escaneie o codigo</p>
+            <div class="bg-[#E6E6E6] dark:bg-neutral-900 rounded-2xl p-8 shadow-2xl max-w-sm w-full mx-4 animate-scale-in border border-neutral-300 dark:border-neutral-700 text-center" @click.stop>
+              <h3 class="text-lg font-oswald font-medium tracking-tight mb-2" x-text="t('scan_qr')"></h3>
+              <p class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-widest mb-6" x-text="t('scan_qr_hint')"></p>
               <div x-show="qrLoading" class="py-8">
                 <div class="skeleton w-48 h-48 mx-auto rounded-xl"></div>
               </div>
               <div x-show="qrData && !qrLoading" class="qr-container inline-block mb-4">
                 <img :src="'data:image/png;base64,' + qrData" class="w-48 h-48" alt="QR Code"/>
               </div>
-              <div x-show="qrError && !qrLoading" class="py-8 text-sm text-neutral-500" x-text="qrError"></div>
+              <div x-show="qrError && !qrLoading" class="py-8 text-sm text-neutral-500 dark:text-neutral-400" x-text="qrError"></div>
               <div class="mt-4 flex justify-center gap-3">
-                <button @click="loadQR()" class="px-4 py-2 rounded-full border border-neutral-400 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 transition-colors">Recarregar</button>
-                <button @click="showQR = false; stopQRPolling()" class="px-4 py-2 rounded-full bg-neutral-950 text-white text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800 transition-colors">Fechar</button>
+                <button @click="loadQR()" class="px-4 py-2 rounded-full border border-neutral-400 dark:border-neutral-600 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors" x-text="t('reload')"></button>
+                <button @click="showQR = false; stopQRPolling()" class="px-4 py-2 rounded-full bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800 dark:hover:bg-neutral-300 transition-colors" x-text="t('close')"></button>
               </div>
               <!-- Pairing alternative -->
-              <div class="mt-6 pt-4 border-t border-neutral-300">
-                <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 mb-3">Ou pareie com codigo</p>
+              <div class="mt-6 pt-4 border-t border-neutral-300 dark:border-neutral-700">
+                <p class="text-[0.65rem] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-3" x-text="t('pair_phone')"></p>
                 <div class="flex gap-2">
-                  <input type="text" x-model="pairPhone" placeholder="5511999999999" class="flex-1 px-3 py-2 rounded-lg bg-white/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500"/>
-                  <button @click="doPair()" class="px-4 py-2 rounded-lg bg-neutral-950 text-white text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800">Parear</button>
+                  <input type="text" x-model="pairPhone" placeholder="5511999999999" class="flex-1 px-3 py-2 rounded-lg bg-white/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-600 text-sm focus:outline-none focus:border-neutral-500 dark:text-neutral-100 dark:placeholder-neutral-500"/>
+                  <button @click="doPair()" class="px-4 py-2 rounded-lg bg-neutral-950 dark:bg-neutral-100 text-white dark:text-neutral-950 text-xs font-semibold uppercase tracking-widest hover:bg-neutral-800 dark:hover:bg-neutral-300" x-text="t('pair')"></button>
                 </div>
                 <p x-show="pairCode" class="mt-2 text-lg font-mono font-bold tracking-wider" x-text="pairCode"></p>
               </div>
@@ -660,9 +678,9 @@
         <div x-show="$store.router.page === 'broadcasts'" x-data="broadcastsPage()" x-effect="if($store.router.page === 'broadcasts' && $store.auth.authenticated) load()">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
-              <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 mb-2">Grupo</label>
-              <select x-model="selectedGroup" @change="loadBroadcasts()" class="px-4 py-2 rounded-xl bg-neutral-200/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500">
-                <option value="">Selecione um grupo</option>
+              <label class="block text-xs font-semibold uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-2" x-text="t('grupo')"></label>
+              <select x-model="selectedGroup" @change="loadBroadcasts()" class="px-4 py-2 rounded-xl bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-700 text-sm focus:outline-none focus:border-neutral-500 dark:text-neutral-100">
+                <option value="" x-text="t('select_group')"></option>
                 <template x-for="g in groups" :key="g.id">
                   <option :value="g.id" x-text="g.name"></option>
                 </template>
@@ -672,97 +690,97 @@
 
           <div x-show="selectedGroup && broadcasts.length > 0" class="space-y-3">
             <template x-for="bc in broadcasts" :key="bc.id">
-              <div class="bg-neutral-200/50 rounded-2xl border border-neutral-300 p-5">
+              <div class="bg-neutral-200/50 dark:bg-neutral-800/50 rounded-2xl border border-neutral-300 dark:border-neutral-700 p-5">
                 <div class="flex items-center justify-between mb-3">
                   <div>
-                    <p class="text-xs font-mono text-neutral-500" x-text="bc.id?.slice(0, 8) + '...'"></p>
-                    <p class="text-xs text-neutral-400 mt-0.5" x-text="formatDateTime(bc.created_at)"></p>
+                    <p class="text-xs font-mono text-neutral-500 dark:text-neutral-400" x-text="bc.id?.slice(0, 8) + '...'"></p>
+                    <p class="text-xs text-neutral-400 dark:text-neutral-500 mt-0.5" x-text="formatDateTime(bc.created_at)"></p>
                   </div>
-                  <span :class="[BroadcastStatusColors[bc.status]?.bg, BroadcastStatusColors[bc.status]?.text]" class="px-2.5 py-1 rounded-full text-[0.6rem] font-semibold uppercase tracking-widest" x-text="BroadcastStatusLabels[bc.status] || bc.status"></span>
+                  <span :class="[BroadcastStatusColors[bc.status]?.bg, BroadcastStatusColors[bc.status]?.text]" class="px-2.5 py-1 rounded-full text-[0.6rem] font-semibold uppercase tracking-widest" x-text="getBroadcastStatusLabel(bc.status)"></span>
                 </div>
                 <!-- Progress bar -->
-                <div class="w-full bg-neutral-300 rounded-full h-2 mb-2">
+                <div class="w-full bg-neutral-300 dark:bg-neutral-700 rounded-full h-2 mb-2">
                   <div class="bg-emerald-500 h-2 rounded-full progress-bar" :style="'width: ' + (bc.total > 0 ? (bc.sent / bc.total * 100) : 0) + '%'"></div>
                 </div>
-                <div class="flex items-center justify-between text-xs text-neutral-500">
-                  <span><span x-text="bc.sent || 0"></span>/<span x-text="bc.total || 0"></span> enviadas</span>
-                  <span><span x-text="bc.delivered || 0"></span> entregues</span>
-                  <span class="text-red-500"><span x-text="bc.failed || 0"></span> falhas</span>
+                <div class="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
+                  <span><span x-text="bc.sent || 0"></span>/<span x-text="bc.total || 0"></span> <span x-text="t('sent').toLowerCase()"></span></span>
+                  <span><span x-text="bc.delivered || 0"></span> <span x-text="t('delivered').toLowerCase()"></span></span>
+                  <span class="text-red-500 dark:text-red-400"><span x-text="bc.failed || 0"></span> <span x-text="t('failures')"></span></span>
                 </div>
               </div>
             </template>
           </div>
 
           <div x-show="selectedGroup && broadcasts.length === 0 && !loading" class="text-center py-12">
-            <p class="text-sm text-neutral-500 uppercase tracking-widest">Nenhum broadcast encontrado</p>
+            <p class="text-sm text-neutral-500 dark:text-neutral-400 uppercase tracking-widest" x-text="t('no_broadcasts')"></p>
           </div>
           <div x-show="!selectedGroup" class="text-center py-12">
-            <p class="text-sm text-neutral-500 uppercase tracking-widest">Selecione um grupo para ver broadcasts</p>
+            <p class="text-sm text-neutral-500 dark:text-neutral-400 uppercase tracking-widest" x-text="t('select_group_hint')"></p>
           </div>
         </div>
 
         <!-- LOGS PAGE -->
         <div x-show="$store.router.page === 'logs'" x-data="logsPage()" x-effect="if($store.router.page === 'logs' && $store.auth.authenticated) load()">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <h2 class="text-lg font-oswald font-semibold tracking-wide uppercase">Logs do Sistema</h2>
+            <h2 class="text-lg font-oswald font-semibold tracking-wide uppercase" x-text="t('system_logs')"></h2>
             <div class="flex items-center gap-3">
-              <select x-model="levelFilter" @change="load(true)" class="px-3 py-2 rounded-xl bg-neutral-200/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500">
-                <option value="">Todos os niveis</option>
+              <select x-model="levelFilter" @change="load(true)" class="px-3 py-2 rounded-xl bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-700 text-sm focus:outline-none focus:border-neutral-500 dark:text-neutral-100">
+                <option value="" x-text="t('all_levels')"></option>
                 <option value="debug">Debug</option>
                 <option value="info">Info</option>
                 <option value="warn">Warn</option>
                 <option value="error">Error</option>
                 <option value="fatal">Fatal</option>
               </select>
-              <select x-model="limitFilter" @change="load(true)" class="px-3 py-2 rounded-xl bg-neutral-200/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500">
-                <option value="50">50 linhas</option>
-                <option value="100">100 linhas</option>
-                <option value="200">200 linhas</option>
-                <option value="500">500 linhas</option>
+              <select x-model="limitFilter" @change="load(true)" class="px-3 py-2 rounded-xl bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-700 text-sm focus:outline-none focus:border-neutral-500 dark:text-neutral-100">
+                <option value="50">50 <span x-text="t('lines')"></span></option>
+                <option value="100">100 <span x-text="t('lines')"></span></option>
+                <option value="200">200 <span x-text="t('lines')"></span></option>
+                <option value="500">500 <span x-text="t('lines')"></span></option>
               </select>
-              <label class="flex items-center gap-2 text-sm text-neutral-600 cursor-pointer select-none">
-                <input type="checkbox" x-model="autoRefresh" @change="toggleAutoRefresh()" class="rounded border-neutral-400">
-                Auto-refresh
+              <label class="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 cursor-pointer select-none">
+                <input type="checkbox" x-model="autoRefresh" @change="toggleAutoRefresh()" class="rounded border-neutral-400 dark:border-neutral-600">
+                <span x-text="t('auto_refresh')"></span>
               </label>
-              <button @click="load(true)" class="flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white rounded-xl text-sm hover:bg-neutral-800 transition-colors">
+              <button @click="load(true)" class="flex items-center gap-2 px-4 py-2 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-xl text-sm hover:bg-neutral-800 dark:hover:bg-neutral-300 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182M2.985 14.652"/></svg>
-                Atualizar
+                <span x-text="t('refresh')"></span>
               </button>
             </div>
           </div>
 
           <!-- Stats -->
           <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-            <div class="bg-white rounded-xl border border-neutral-200 px-4 py-3">
-              <p class="text-[0.6rem] font-semibold uppercase tracking-widest text-neutral-500 mb-1">Total</p>
+            <div class="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 px-4 py-3">
+              <p class="text-[0.6rem] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1" x-text="t('total')"></p>
               <p class="text-xl font-oswald font-semibold" x-text="logs.length"></p>
             </div>
-            <div class="bg-white rounded-xl border border-neutral-200 px-4 py-3">
+            <div class="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 px-4 py-3">
               <p class="text-[0.6rem] font-semibold uppercase tracking-widest text-blue-500 mb-1">Info</p>
-              <p class="text-xl font-oswald font-semibold text-blue-600" x-text="logs.filter(l => l.level === 'info').length"></p>
+              <p class="text-xl font-oswald font-semibold text-blue-600 dark:text-blue-400" x-text="logs.filter(l => l.level === 'info').length"></p>
             </div>
-            <div class="bg-white rounded-xl border border-neutral-200 px-4 py-3">
+            <div class="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 px-4 py-3">
               <p class="text-[0.6rem] font-semibold uppercase tracking-widest text-amber-500 mb-1">Warn</p>
-              <p class="text-xl font-oswald font-semibold text-amber-600" x-text="logs.filter(l => l.level === 'warn' || l.level === 'warning').length"></p>
+              <p class="text-xl font-oswald font-semibold text-amber-600 dark:text-amber-400" x-text="logs.filter(l => l.level === 'warn' || l.level === 'warning').length"></p>
             </div>
-            <div class="bg-white rounded-xl border border-neutral-200 px-4 py-3">
+            <div class="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 px-4 py-3">
               <p class="text-[0.6rem] font-semibold uppercase tracking-widest text-red-500 mb-1">Error</p>
-              <p class="text-xl font-oswald font-semibold text-red-600" x-text="logs.filter(l => l.level === 'error').length"></p>
+              <p class="text-xl font-oswald font-semibold text-red-600 dark:text-red-400" x-text="logs.filter(l => l.level === 'error').length"></p>
             </div>
-            <div class="bg-white rounded-xl border border-neutral-200 px-4 py-3">
-              <p class="text-[0.6rem] font-semibold uppercase tracking-widest text-red-700 mb-1">Fatal</p>
-              <p class="text-xl font-oswald font-semibold text-red-800" x-text="logs.filter(l => l.level === 'fatal').length"></p>
+            <div class="bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 px-4 py-3">
+              <p class="text-[0.6rem] font-semibold uppercase tracking-widest text-red-700 dark:text-red-500 mb-1">Fatal</p>
+              <p class="text-xl font-oswald font-semibold text-red-800 dark:text-red-400" x-text="logs.filter(l => l.level === 'fatal').length"></p>
             </div>
           </div>
 
           <!-- Loading -->
           <div x-show="loading" class="text-center py-12">
-            <div class="inline-block w-6 h-6 border-2 border-neutral-300 border-t-neutral-900 rounded-full animate-spin"></div>
+            <div class="inline-block w-6 h-6 border-2 border-neutral-300 dark:border-neutral-600 border-t-neutral-900 dark:border-t-neutral-100 rounded-full animate-spin"></div>
           </div>
 
           <!-- Search -->
           <div x-show="!loading && logs.length > 0" class="mb-4">
-            <input type="text" x-model="search" placeholder="Buscar nos logs..." class="w-full px-4 py-2.5 rounded-xl bg-neutral-200/50 border border-neutral-300 text-sm focus:outline-none focus:border-neutral-500 placeholder:text-neutral-400">
+            <input type="text" x-model="search" :placeholder="t('search_logs')" class="w-full px-4 py-2.5 rounded-xl bg-neutral-200/50 dark:bg-neutral-800/50 border border-neutral-300 dark:border-neutral-700 text-sm focus:outline-none focus:border-neutral-500 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 dark:text-neutral-100">
           </div>
 
           <!-- Log entries -->
@@ -802,15 +820,15 @@
                   </template>
                 </div>
               </template>
-              <p x-show="!log.fields || Object.keys(log.fields).length === 0" class="text-neutral-500">Sem campos adicionais</p>
+              <p x-show="!log.fields || Object.keys(log.fields).length === 0" class="text-neutral-500" x-text="t('no_extra_fields')"></p>
             </div>
           </template>
 
           <!-- Empty state -->
           <div x-show="!loading && logs.length === 0" class="text-center py-16">
-            <svg class="w-12 h-12 mx-auto text-neutral-300 mb-4" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z"/></svg>
-            <p class="text-sm font-semibold uppercase tracking-widest text-neutral-500 mb-1">Nenhum log encontrado</p>
-            <p class="text-xs text-neutral-400">Os logs aparecerao conforme a aplicacao processa requests</p>
+            <svg class="w-12 h-12 mx-auto text-neutral-300 dark:text-neutral-600 mb-4" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z"/></svg>
+            <p class="text-sm font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1" x-text="t('no_logs')"></p>
+            <p class="text-xs text-neutral-400 dark:text-neutral-500" x-text="t('logs_appear_hint')"></p>
           </div>
         </div>
 
@@ -835,7 +853,7 @@
           try {
             await Alpine.store('auth').login(this.apiKey.trim())
           } catch (err) {
-            Alpine.store('toast').show('error', 'API key invalida')
+            Alpine.store('toast').show('error', t('invalid_api_key'))
           } finally {
             this.loading = false
           }
@@ -848,9 +866,9 @@
             const res = await Api.register(this.tenantName.trim())
             if (res.success && res.data?.api_key) {
               this.generatedKey = res.data.api_key
-              Alpine.store('toast').show('success', 'Conta criada! Salve sua API key.')
+              Alpine.store('toast').show('success', t('account_created'))
             } else {
-              Alpine.store('toast').show('error', res.error?.message || 'Erro ao criar conta')
+              Alpine.store('toast').show('error', res.error?.message || t('account_create_error'))
             }
           } catch (err) {
             Alpine.store('toast').show('error', err.message)
@@ -875,13 +893,13 @@
             const usage = await Api.getUsage()
             const d = usage?.data || {}
             this.cards = [
-              { label: 'Grupos', value: d.groups_count || 0, sub: 'Total de grupos', icon: '<svg class="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584"/></svg>' },
-              { label: 'Instancias', value: d.instances_count || 0, sub: 'Total de instancias', icon: '<svg class="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3"/></svg>' },
-              { label: 'Disponveis', value: d.available_count || 0, sub: 'Instancias ativas', icon: '<svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' },
-              { label: 'Banidas', value: d.banned_count || 0, sub: 'Instancias banidas', icon: '<svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>' },
+              { label: t('groups_label'), value: d.groups_count || 0, sub: t('total_groups'), icon: '<svg class="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584"/></svg>' },
+              { label: t('instances_label'), value: d.instances_count || 0, sub: t('total_instances'), icon: '<svg class="w-4 h-4 text-neutral-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3"/></svg>' },
+              { label: t('available_label'), value: d.available_count || 0, sub: t('active_instances'), icon: '<svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' },
+              { label: t('banned_label'), value: d.banned_count || 0, sub: t('banned_instances'), icon: '<svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/></svg>' },
             ]
           } catch (err) {
-            Alpine.store('toast').show('error', 'Erro ao carregar dashboard')
+            Alpine.store('toast').show('error', t('dashboard_load_error'))
           } finally {
             this.loading = false
           }
@@ -910,7 +928,7 @@
             this.groups = res?.data || []
             this.filtered = [...this.groups]
           } catch (err) {
-            Alpine.store('toast').show('error', 'Erro ao carregar grupos')
+            Alpine.store('toast').show('error', t('groups_load_error'))
           } finally {
             this.loading = false
           }
@@ -931,10 +949,10 @@
           try {
             if (this.editId) {
               await Api.updateGroup(this.editId, this.form)
-              Alpine.store('toast').show('success', 'Grupo atualizado')
+              Alpine.store('toast').show('success', t('group_updated'))
             } else {
               await Api.createGroup(this.form)
-              Alpine.store('toast').show('success', 'Grupo criado')
+              Alpine.store('toast').show('success', t('group_created'))
             }
             this.showCreate = false
             await this.load(true)
@@ -952,7 +970,7 @@
         group: null,
         instances: [],
         metrics: null,
-        tab: 'instancias',
+        tab: 'tab_instances',
         loading: true,
         showAddInstance: false,
         instForm: { display_name: '', priority: 1, daily_budget: 200, hourly_budget: 30 },
@@ -971,7 +989,7 @@
             this.instances = instancesRes?.data || []
             Api.getGroupMetrics(groupId).then(r => this.metrics = r?.data).catch(() => {})
           } catch (err) {
-            Alpine.store('toast').show('error', 'Erro ao carregar grupo')
+            Alpine.store('toast').show('error', t('group_load_error'))
           } finally {
             this.loading = false
           }
@@ -990,7 +1008,7 @@
         async addInstance() {
           try {
             await Api.createInstance(this._lastGroupId, this.instForm)
-            Alpine.store('toast').show('success', 'Instancia criada')
+            Alpine.store('toast').show('success', t('instance_created'))
             this.showAddInstance = false
             const res = await Api.listInstances(this._lastGroupId)
             this.instances = res?.data || []
@@ -1002,7 +1020,7 @@
         async connectInst(id) {
           try {
             await Api.connectInstance(id)
-            Alpine.store('toast').show('success', 'Conectando...')
+            Alpine.store('toast').show('success', t('connecting'))
             setTimeout(() => this.refreshInstances(), 2000)
           } catch (err) {
             Alpine.store('toast').show('error', err.message)
@@ -1012,7 +1030,7 @@
         async disconnectInst(id) {
           try {
             await Api.disconnectInstance(id)
-            Alpine.store('toast').show('success', 'Desconectado')
+            Alpine.store('toast').show('success', t('disconnected'))
             setTimeout(() => this.refreshInstances(), 1000)
           } catch (err) {
             Alpine.store('toast').show('error', err.message)
@@ -1028,7 +1046,7 @@
           try {
             await Api.pauseGroup(this._lastGroupId)
             this.group = { ...this.group, is_active: false }
-            Alpine.store('toast').show('success', 'Grupo pausado')
+            Alpine.store('toast').show('success', t('group_paused'))
           } catch (err) { Alpine.store('toast').show('error', err.message) }
         },
 
@@ -1036,14 +1054,14 @@
           try {
             await Api.resumeGroup(this._lastGroupId)
             this.group = { ...this.group, is_active: true }
-            Alpine.store('toast').show('success', 'Grupo retomado')
+            Alpine.store('toast').show('success', t('group_resumed'))
           } catch (err) { Alpine.store('toast').show('error', err.message) }
         },
 
         async doDelete() {
           try {
             await Api.deleteGroup(this._lastGroupId)
-            Alpine.store('toast').show('success', 'Grupo excluido')
+            Alpine.store('toast').show('success', t('group_deleted'))
             this._lastGroupId = null
             Alpine.store('router').navigate('groups')
           } catch (err) { Alpine.store('toast').show('error', err.message) }
@@ -1072,7 +1090,7 @@
             const res = await Api.getInstance(instanceId)
             this.instance = res?.data
           } catch (err) {
-            Alpine.store('toast').show('error', 'Erro ao carregar instancia')
+            Alpine.store('toast').show('error', t('instance_load_error'))
           } finally {
             this.loading = false
           }
@@ -1086,7 +1104,7 @@
             const res = await Api.getQRCode(this._lastId)
             this.qrData = res?.data?.qr_base64
             if (!this.qrData) {
-              this.qrError = res?.data?.status === 'already_connected' ? 'Ja conectado!' : 'QR code nao disponivel'
+              this.qrError = res?.data?.status === 'already_connected' ? t('already_connected') : t('qr_not_available')
               if (res?.data?.status === 'already_connected') {
                 this.showQR = false
                 await this.load(this._lastId)
@@ -1110,7 +1128,7 @@
               if (status?.data?.status === 'available') {
                 this.showQR = false
                 this.stopQRPolling()
-                Alpine.store('toast').show('success', 'WhatsApp conectado!')
+                Alpine.store('toast').show('success', t('whatsapp_connected'))
                 this._lastId = null
                 await this.load(Alpine.store('router').params.instanceId)
               }
@@ -1128,7 +1146,7 @@
         async doConnect() {
           try {
             await Api.connectInstance(this._lastId)
-            Alpine.store('toast').show('success', 'Conectando...')
+            Alpine.store('toast').show('success', t('connecting'))
             this.showQR = true
             this.loadQR()
           } catch (err) { Alpine.store('toast').show('error', err.message) }
@@ -1138,14 +1156,14 @@
           try {
             await Api.disconnectInstance(this._lastId)
             this.instance = { ...this.instance, status: 'disconnected' }
-            Alpine.store('toast').show('success', 'Desconectado')
+            Alpine.store('toast').show('success', t('disconnected'))
           } catch (err) { Alpine.store('toast').show('error', err.message) }
         },
 
         async doRestart() {
           try {
             await Api.restartInstance(this._lastId)
-            Alpine.store('toast').show('info', 'Reiniciando...')
+            Alpine.store('toast').show('info', t('restarting'))
             setTimeout(async () => {
               this._lastId = null
               await this.load(Alpine.store('router').params.instanceId)
@@ -1159,7 +1177,7 @@
             const res = await Api.pairPhone(this._lastId, this.pairPhone.trim())
             this.pairCode = res?.data?.code || res?.data?.pairing_code || ''
             if (this.pairCode) {
-              Alpine.store('toast').show('success', 'Codigo gerado! Digite no WhatsApp.')
+              Alpine.store('toast').show('success', t('code_generated'))
             }
           } catch (err) { Alpine.store('toast').show('error', err.message) }
         },
@@ -1167,7 +1185,7 @@
         async doDeleteInstance() {
           try {
             await Api.deleteInstance(this._lastId)
-            Alpine.store('toast').show('success', 'Instancia excluida')
+            Alpine.store('toast').show('success', t('instance_deleted'))
             Alpine.store('router').navigate('group-detail', { groupId: Alpine.store('router').params.groupId })
           } catch (err) { Alpine.store('toast').show('error', err.message) }
         },
@@ -1246,7 +1264,8 @@
         formatLogTime(ts) {
           if (!ts) return ''
           const d = new Date(ts)
-          return d.toLocaleString('pt-BR', { hour12: false })
+          const locale = getLang() === 'en' ? 'en-US' : 'pt-BR'
+          return d.toLocaleString(locale, { hour12: false })
         },
 
         toggleAutoRefresh() {

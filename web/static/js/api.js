@@ -32,7 +32,7 @@ const Api = {
     if (response.status === 401) {
       this.clearApiKey()
       Alpine.store('auth').logout()
-      Alpine.store('toast').show('error', 'Sessao expirada. Faca login novamente.')
+      Alpine.store('toast').show('error', t('session_expired'))
       throw new Error('Unauthorized')
     }
 
@@ -43,7 +43,7 @@ const Api = {
     const data = await response.json()
 
     if (!data.success) {
-      const msg = data.error?.message || 'Erro desconhecido'
+      const msg = data.error?.message || t('unknown_error')
       throw new Error(msg)
     }
 
